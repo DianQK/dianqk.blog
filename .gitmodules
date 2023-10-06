@@ -1,0 +1,3 @@
+[submodule "themes/lightspeed"]
+	path = themes/lightspeed
+	url = https://github.com/DianQK/lightspeed.git

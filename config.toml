@@ -1,0 +1,41 @@
+base_url = "https://dianqk.blog"
+title = "dianqk's blog"
+description = ""
+
+compile_sass = true
+theme = "lightspeed"
+minify_html = false
+
+generate_feed = true
+feed_filename = "atom.xml"
+feed_limit = 10
+
+build_search_index = false
+default_language = "en"
+
+[markdown]
+highlight_code = true
+
+[translations]
+title = "dianqk's blog"
+description = ""
+
+[languages.zh]
+generate_feed = true
+base_url = "https://dianqk.blog/zh"
+
+[languages.zh.translations]
+title = "靛青博客"
+description = ""
+
+[extra.footer_links]
+en = [
+    { url = "$BASE_URL/about", name = "About" },
+    { url = "$BASE_URL/atom.xml", name = "RSS" },
+    { url = "https://github.com/DianQK/dianqk.blog", name = "Source on Github" },
+]
+zh = [
+    { url = "$BASE_URL/about", name = "关于" },
+    { url = "$BASE_URL/atom.xml", name = "RSS" },
+    { url = "https://github.com/DianQK/dianqk.blog", name = "Github 源码" },
+]
