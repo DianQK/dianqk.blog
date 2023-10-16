@@ -28,6 +28,9 @@ base_url = "https://dianqk.blog/zh"
 title = "靛青博客"
 description = ""
 
+[extra]
+mastodon = "https://mastodon.online/@dianqk"
+
 [extra.footer_links]
 en = [
     { url = "$BASE_URL/about", name = "About" },
