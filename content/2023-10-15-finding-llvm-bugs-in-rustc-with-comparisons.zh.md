@@ -344,6 +344,8 @@ BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_1
 不过我们可以使用类似的方法验证问题是否与 `DSEPass` 有关，通过修改代码跳过 `DSEPass` 即可。
 接下来和调试 `MemCpyOptPass` 一样，我们可以找到具体是哪个指令 `DSEPass` 转换导致了最终的错误编译。
 
+更新：为了让 `-opt-bisect-limit` 的结果更稳定，我们可以试试 `-Z no-parallel-llvm`。另外，`rustc` 默认会尝试执行 ThinLTO，可以通过 `-C lto=false` 关闭。
+
 # 获取 IR 准备 LLVM 的调试
 
 这部分涉及到 LLVM 的具体调试，我暂时还没有什么好的经验分享。
@@ -641,3 +643,4 @@ occupied niche: found 0x7fba00000001 but must be in 0x0..=0x2 in type std::optio
 - [https://llvm.org/docs/GitBisecting.html](https://llvm.org/docs/GitBisecting.html)
 - [https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option](https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option)
 - [https://www.llvm.org/docs/AliasAnalysis.html](https://www.llvm.org/docs/AliasAnalysis.html)
+- [https://doc.rust-lang.org/rustc/codegen-options/index.html#lto](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto)

@@ -342,6 +342,8 @@ BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_1
 However, we can verify that the problem is related to `DSEPass` in a similar way, by changing the code to skip `DSEPass`.
 Next, as with debugging `MemCpyOptPass`, we can find out exactly which instruction `DSEPass` transformation is causing the final mis-compilation.
 
+Update: For more stable results with `-opt-bisect-limit`, we can try `-Z no-parallel-llvm`. Also, `rustc` tries to perform ThinLTO by default, which can be turned off with `-C lto=false`.
+
 # Getting IR to prepare for LLVM debugging
 
 This part is related to LLVM debugging, and I don't have any good experience to share yet.
@@ -636,3 +638,4 @@ I don't have a clear idea of how to submit a proper fix yet, and currently, I ra
 - [https://llvm.org/docs/GitBisecting.html](https://llvm.org/docs/GitBisecting.html)
 - [https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option](https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option)
 - [https://www.llvm.org/docs/AliasAnalysis.html](https://www.llvm.org/docs/AliasAnalysis.html)
+- [https://doc.rust-lang.org/rustc/codegen-options/index.html#lto](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto)
