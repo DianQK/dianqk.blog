@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh">
+    <title></title>
+    <link href="https://dianqk.blog/zh/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://dianqk.blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-10-28T00:00:00+00:00</updated>
+    <id>https://dianqk.blog/zh/atom.xml</id>
+    <entry xml:lang="zh">
+        <title>2023 总结</title>
+        <published>2023-10-28T00:00:00+00:00</published>
+        <updated>2023-10-28T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://dianqk.blog/zh/2023-summary/" type="text/html"/>
+        <id>https://dianqk.blog/zh/2023-summary/</id>
+        
+        <content type="html">&lt;h1 id=&quot;gai-gua&quot;&gt;概括&lt;&#x2F;h1&gt;
+&lt;p&gt;今年是我第一年持续参与开源贡献工作，我修复了许多错误编译，也增加了一些缺失的优化。还有一些我不知道如何归类，涉及各种内容，比如 LTO、DebugInfo，内置函数和 WebAssembly，甚至还有 Apple Silicon 相关。&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;在这个过程中，我得到了许多的人的帮助，尤其是审核我的 PR 的人，非常感谢。(●´∀｀●)&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;一些值得注意的内容：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;我搞清楚了一个长期存在的 LTO 下调试信息损坏的问题&lt;&#x2F;li&gt;
+&lt;li&gt;我将 Rust 中内置函数的 crate 也添加进 LTO，这也是一个长期存在的问题&lt;&#x2F;li&gt;
+&lt;li&gt;为了更方便的交流，我给自己起了一个英文名：Quentin Dian&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;我使用这些表情对相关工作进行分类：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;💢 指错误编译&lt;&#x2F;li&gt;
+&lt;li&gt;🍻 补充缺失的优化&lt;&#x2F;li&gt;
+&lt;li&gt;ℹ️ 与调试有关&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 与 Rust 有关&lt;&#x2F;li&gt;
+&lt;li&gt;🐉 与 LLVM 有关&lt;&#x2F;li&gt;
+&lt;li&gt;🐦 与 Swift 有关&lt;&#x2F;li&gt;
+&lt;li&gt;🍎 与 Apple 有关&lt;&#x2F;li&gt;
+&lt;li&gt;⏳ 被其他问题阻塞&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;llvm&quot;&gt;LLVM&lt;&#x2F;h1&gt;
+&lt;p&gt;提交记录：&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&lt;&#x2F;a&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;对了，我的第一个 LLVM 提交是：&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;1e9fa0b12a7619add4a259f80315f984b5f7e2ce&quot;&gt;[MachineOutliner] Fix the side effect of outlined function when the register is implicit use and implicit-def in the same instruction. D112911&lt;&#x2F;a&gt;。&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;🍻🦀⏳ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;b6a0be8ce3114d0c57e7a7d6c3c222986ca506ad&quot;&gt;[SimplifyCFG] Check if the return instruction causes undefined behavior D144319&lt;&#x2F;a&gt; 被 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;69498&quot;&gt;PR69498&lt;&#x2F;a&gt; 阻塞&lt;&#x2F;li&gt;
+&lt;li&gt;🍻⏳ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;f890f010f6a70addbd885acd0c8d1b9578b6246f&quot;&gt;[SimplifyCFG] Improve the precision of &lt;code&gt;PtrValueMayBeModified&lt;&#x2F;code&gt; D144563&lt;&#x2F;a&gt; 跟随 D144319 的提交，尽管这没有被  &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;69498&quot;&gt;PR69498&lt;&#x2F;a&gt; 阻塞&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;2832d7941f4207f1fcf813b27cf08cecc3086959&quot;&gt;[SROA] Remove UB-implying metadata when promoting speculative instruction. D148456&lt;&#x2F;a&gt; 修复 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;110256&quot;&gt;PR110256&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;533b7c1f6c696817df332cc7c9acbe3b454eadf2&quot;&gt;[GlobalOpt] Don&#x27;t replace the aliasee if it has other references. D145293&lt;&#x2F;a&gt; 修复 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;108030&quot;&gt;PR108030&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀🐦ℹ️ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;2ee4d0386c783f58abe708298228de648239b435&quot;&gt;[Verifier] definition subprograms cannot be nested within DICompositeType when enabling ODR. D152095&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🐦ℹ️ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;ca1a5b37c7236dd29a3169859153dfdcce066b51&quot;&gt;[Coroutine][DebugInfo] Update the linkage name of the declaration of coro-split functions in the debug info. D157184&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;c3f227ead65c606409ff8cc3333a6c751f156a9c&quot;&gt;[TailCallElim] Remove the readonly attribute of byval. D156793&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;65219&quot;&gt;[JumpThreading] Invalidate LVI after combineMetadataForCSE. #65219&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🍻🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;65875&quot;&gt;[EarlyCSE] Compare GEP instructions based on offset #65875&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🍻🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67077&quot;&gt;[SimplifyCFG] Hoist common instructions on switch #67077&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&quot;&gt;[MemCpyOpt] Merge alias metadatas when replacing arguments #67539&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&quot;&gt;[LVI][CVP] Treat undef like a full range #68190&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68711&quot;&gt;[LVI][CVP] Treat undef like a full range on abs(x, false) #68711&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;70580&quot;&gt;[MemCpyOpt] Combine alias metadatas when replacing byval arguments #70580&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;75184&quot;&gt;[AArch64] ORRWrs is copy instruction when there&#x27;s no implicit def of the X register #75184&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h1 id=&quot;rust&quot;&gt;Rust&lt;&#x2F;h1&gt;
+&lt;p&gt;提交记录：&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;除了更新测试用例等简单 PR，其他都是围绕 builtins &amp;amp; LTO 的 PR：&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;113716&quot;&gt;Add the &lt;code&gt;no-builtins&lt;&#x2F;code&gt; attribute to functions when &lt;code&gt;no_builtins&lt;&#x2F;code&gt; is applied at the crate level. #113716&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;113923&quot;&gt;Restore &lt;code&gt;#![no_builtins]&lt;&#x2F;code&gt; crates participation in LTO. #113923&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;118036&quot;&gt;Add thinlto support to codegen, assembly and coverage tests #118036&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;118568&quot;&gt;Avoid adding builtin functions to &lt;code&gt;symbols.o&lt;&#x2F;code&gt; #118568&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;尽管在这个过程中解决了很多问题，不幸的是，仍然有一些&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;118609&quot;&gt;已知问题&lt;&#x2F;a&gt;需要解决。在解决这些问题之后，我会提交相关的 MCP。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;ruslin&quot;&gt;Ruslin&lt;&#x2F;h1&gt;
+&lt;p&gt;我使用 Joplin 记笔记，但我不喜欢 Joplin 的 Android 客户端。为此我编写了一个兼容的客户端：&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ruslin-note&#x2F;ruslin-android&quot;&gt;ruslin-android&lt;&#x2F;a&gt;。很抱歉最近一直没有更新，我会在明年尝试调整一下我的业余时间。事实上我也在考虑桌面端的开发。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;qi-ta-xiang-mu&quot;&gt;其他项目&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;ℹ️🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;apple&#x2F;swift&#x2F;pull&#x2F;67077&quot;&gt;[swift][IRGen][DebugInfo] split method declaration and definition. #67077&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;ℹ️🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;apple&#x2F;swift&#x2F;pull&#x2F;67592&quot;&gt;[swift][Backtracing][Linux] Support the &lt;code&gt;DW_AT_specification&lt;&#x2F;code&gt; attribute. #67592 &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wasm3&#x2F;wasm3&#x2F;pull&#x2F;436&quot;&gt;[wasm3] Fix the issue of incorrectly freeing the stack address when unwinding local functions. #436&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DioxusLabs&#x2F;dioxus&#x2F;pull&#x2F;1112&quot;&gt;[dioxus] Fix the issue of duplicate unique ID for atoms using &lt;code&gt;newtype&lt;&#x2F;code&gt;. #1112&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;ge-ren-xiang-guan&quot;&gt;个人相关&lt;&#x2F;h1&gt;
+&lt;p&gt;DianQK 只是我随意起得中文笔名靛（Dian）青（Qing）K的拼音缩写，靛青指 indigo。这导致大家不知道该如何称呼我。为此我向 ChatGPT 询问了一个名字：Quentin Dian。所以你可以叫我 Dian 或者 dianqk 都可以。&lt;&#x2F;p&gt;
+&lt;p&gt;曾经我一直在使用 Arch Linux，现在我全部切换到了 NixOS，这是个很棒的操作系统，我可以用代码管理一切。&lt;&#x2F;p&gt;
+&lt;p&gt;为了提高我的效率，我还购买了 GPD 掌机，上面的大部分代码都是我在地铁上使用 GPD 完成的。我还组装了一台 7950X 主机，这将我的本地构建时间缩短了一半，我可以在几分钟之内完成一次全量编译。我还买了一台 Mac mini（M2），这样我就可以测试这个平台的问题了。&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;2023-10-28-summary-gpd.jpg&quot; alt=&quot;GPG Win 4&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="zh">
+        <title>使用好坏比较发现 rust 中的 LLVM bug</title>
+        <published>2023-10-15T00:00:00+00:00</published>
+        <updated>2023-10-15T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://dianqk.blog/zh/finding-llvm-bugs-in-rustc-with-comparisons/" type="text/html"/>
+        <id>https://dianqk.blog/zh/finding-llvm-bugs-in-rustc-with-comparisons/</id>
+        
+        <content type="html">&lt;h1 id=&quot;zhai-yao&quot;&gt;摘要&lt;&#x2F;h1&gt;
+&lt;p&gt;在大型工程中定位问题总是很复杂的，掺杂在 rust 中的 LLVM 的 bug 就是这类情况。我将在本文介绍我如何定位 stage2 下 rust 单元测试失败问题。
+我将围绕 &lt;a href=&quot;https:&#x2F;&#x2F;rust-lang.zulipchat.com&#x2F;#narrow&#x2F;stream&#x2F;131828-t-compiler&#x2F;topic&#x2F;Failing.20tests.20when.20rustc.20is.20compiled.20with.201.20CGU&quot;&gt;Failing tests when rustc is compiled with 1 CGU&lt;&#x2F;a&gt; 和 &lt;a href=&quot;https:&#x2F;&#x2F;rust-lang.zulipchat.com&#x2F;#narrow&#x2F;stream&#x2F;131828-t-compiler&#x2F;topic&#x2F;Implementing.20niche.20checks&quot;&gt;Implementing niche checks&lt;&#x2F;a&gt; 记录我解决这类问题的过程，希望能对后续解决该类问题有所帮助。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;kai-shi-zhi-qian&quot;&gt;开始之前&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;由于这是我解决后的总结文章，我可能会疏漏一些详细过程，还请见谅。&lt;&#x2F;li&gt;
+&lt;li&gt;欢迎提交 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;dianqk.blog&#x2F;issues&quot;&gt;issue&lt;&#x2F;a&gt; 或 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;dianqk.blog&#x2F;pulls&quot;&gt;PR&lt;&#x2F;a&gt; 改正文章的错误&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;我为本文准备了对应的工程，参见：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;修复这两个问题的 PR 是：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;di-1-ge-wen-ti-de-fu-xian-fang-shi&quot;&gt;第 1 个问题的复现方式&lt;&#x2F;h1&gt;
+&lt;p&gt;首先我们需要切换到可以复现的版本：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; clone https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust.git
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; checkout 085acd02d4abaf2ccaf629134caa83cfe23283c8
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;然后需要修改 &lt;code&gt;config.toml&lt;&#x2F;code&gt;：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profile &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;dist&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profiler &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我们还需要了解 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rustc-perf&quot;&gt;rustc-perf&lt;&#x2F;a&gt; 如何使用，然后使用如下脚本构建带有 PGO 优化的 rustc：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-generate&lt;&#x2F;span&gt;&lt;span&gt;=&#x2F;tmp&#x2F;profiles&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span&gt; run&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --bin&lt;&#x2F;span&gt;&lt;span&gt; collector bench_local&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --include&lt;&#x2F;span&gt;&lt;span&gt; serde,syn &amp;lt;path to stage2&#x2F;bin&#x2F;rustc&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;ci-llvm&#x2F;bin&#x2F;llvm-profdata&lt;&#x2F;span&gt;&lt;span&gt; merge&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -o&lt;&#x2F;span&gt;&lt;span&gt; profiles.profdata &#x2F;tmp&#x2F;profiles
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-use&lt;&#x2F;span&gt;&lt;span&gt;=profiles.profdata&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;接下来使用该版本 rustc 编译如下代码即可复现该问题：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;feature&lt;&#x2F;span&gt;&lt;span&gt;(inline_const)]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        assert!(-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9.223372036854776e18&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f64 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i64 &lt;&#x2F;span&gt;&lt;span&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x8000000000000000&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i64&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;复现的错误日志如下：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error[E0080]:&lt;&#x2F;span&gt;&lt;span&gt; evaluation of `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;main::{constant#0&lt;&#x2F;span&gt;&lt;span&gt;}` failed
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;5 &lt;&#x2F;span&gt;&lt;span&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert!&lt;&#x2F;span&gt;&lt;span&gt;(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;  |         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&lt;&#x2F;span&gt;&lt;span&gt; the evaluated program panicked at &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span&gt;  = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; this error originates in the macro `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert&lt;&#x2F;span&gt;&lt;span&gt;` (in Nightly builds, run with&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; macro-backtrace for more info)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; erroneous constant encountered
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:4:5
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;4 &lt;&#x2F;span&gt;&lt;span&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;     const {
+&lt;&#x2F;span&gt;&lt;span&gt;5 | |         assert!(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;6 | |     }
+&lt;&#x2F;span&gt;&lt;span&gt;  | |&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;_____^
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error:&lt;&#x2F;span&gt;&lt;span&gt; aborting due to previous error
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;For&lt;&#x2F;span&gt;&lt;span&gt; more information about this error, try `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustc --explain&lt;&#x2F;span&gt;&lt;span&gt; E0080`.
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;zuo-yi-xie-chu-bu-de-fen-xi&quot;&gt;做一些初步的分析&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;shi-yong-cuo-wu-dui-zhan-pan-duan-cun-zai-wen-ti-de-crate&quot;&gt;使用错误堆栈判断存在问题的 crate&lt;&#x2F;h2&gt;
+&lt;p&gt;我们可以使用 &lt;code&gt;-Z treat-err-as-bug&lt;&#x2F;code&gt; 获取报错堆栈，被错误编译的函数很可能在这里。&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;›&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc .&#x2F;test.rs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; treat-err-as-bug
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error[E0080]:&lt;&#x2F;span&gt;&lt;span&gt; evaluation of `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;main::{constant#0&lt;&#x2F;span&gt;&lt;span&gt;}` failed
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;5 &lt;&#x2F;span&gt;&lt;span&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert!&lt;&#x2F;span&gt;&lt;span&gt;(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;  |         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&lt;&#x2F;span&gt;&lt;span&gt; the evaluated program panicked at &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span&gt;  = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; this error originates in the macro `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert&lt;&#x2F;span&gt;&lt;span&gt;` (in Nightly builds, run with&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; macro-backtrace for more info)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;thread &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; panicked at compiler&#x2F;rustc_errors&#x2F;src&#x2F;lib.rs:1724:30:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;aborting&lt;&#x2F;span&gt;&lt;span&gt; due to `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;-Z&lt;&#x2F;span&gt;&lt;span&gt; treat-err-as-bug=1`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stack&lt;&#x2F;span&gt;&lt;span&gt; backtrace:
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;23:&lt;&#x2F;span&gt;&lt;span&gt;     0x7f32189f3bd7 - rustc_const_eval&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span&gt;7551efff2730a760&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span&gt;::const_eval::eval_queries::eval_to_const_value_raw_provider
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;通过观察堆栈，我认为 &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt; 是值得关注的 crate。我们可以做个简单的验证来证明我猜测。修改 &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt; 为如下内容：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;16
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我们可以发现问题不再复现。我认为是 stage1 的 rustc 错误编译了 &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt;。&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;jian-hua-test-rs&quot;&gt;简化 &lt;code&gt;test.rs&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;经过一些对复现用例的调整，我发现如下代码也可以复现：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;crate_type &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;lib&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span&gt;_: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span&gt;= -&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1.1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span&gt;- &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;同时我们可以发现，这里的问题表现是任意一个负浮点数转换为有符号整数都会直接变成 0。&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;da-zhi-ding-wei-wen-ti-han-shu&quot;&gt;大致定位问题函数&lt;&#x2F;h2&gt;
+&lt;p&gt;通过阅读 &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt; 代码和分析调用堆栈，我猜测问题出在 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;blob&#x2F;085acd02d4abaf2ccaf629134caa83cfe23283c8&#x2F;compiler&#x2F;rustc_const_eval&#x2F;src&#x2F;interpret&#x2F;cast.rs#L183&quot;&gt;float_to_float_or_int&lt;&#x2F;a&gt; 和 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;blob&#x2F;085acd02d4abaf2ccaf629134caa83cfe23283c8&#x2F;compiler&#x2F;rustc_const_eval&#x2F;src&#x2F;interpret&#x2F;cast.rs#L309&quot;&gt;cast_from_float&lt;&#x2F;a&gt; 附近。&lt;&#x2F;p&gt;
+&lt;p&gt;为了验证这一点，我们可以使用 &lt;code&gt;#[inline(never)]&lt;&#x2F;code&gt; 阻止部分优化。我通过尝试发现，添加 &lt;code&gt;#[inline(never)]&lt;&#x2F;code&gt; 到 &lt;code&gt;float_to_float_or_int&lt;&#x2F;code&gt; 仍然有问题，而添加到 &lt;code&gt;cast_from_float&lt;&#x2F;code&gt; 后，测试代码可以正常编译。我猜测问题出现在 &lt;code&gt;float_to_float_or_int&lt;&#x2F;code&gt; 和内联的函数 &lt;code&gt;cast_from_float&lt;&#x2F;code&gt; 中。&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;zhen-de-he-pgo-you-guan-ma&quot;&gt;真的和 PGO 有关吗？&lt;&#x2F;h2&gt;
+&lt;p&gt;事实上，我们可以直接使用用于生成 PGO 的 stage2 版本 rustc 复现该问题：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-generate&lt;&#x2F;span&gt;&lt;span&gt;=&#x2F;tmp&#x2F;profiles&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;shi-yong-git-bisect-xun-zhao-shi-na-ge-ti-jiao-hong-fa-liao-zhe-ge-wen-ti&quot;&gt;使用 git bisect 寻找是哪个提交触发了这个问题&lt;&#x2F;h1&gt;
+&lt;p&gt;尽管这一结果未必是有问题的提交，但它可以给我们提供一个具体的控制错误编译的方式。我们可以通过调整这个提交进一步定位问题。&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;xuan-qu-yi-ge-hao-de-ti-jiao&quot;&gt;选取一个好的提交&lt;&#x2F;h2&gt;
+&lt;p&gt;为了执行 git bisect，我们需要找到一个好的提交。
+如果我们不能在一个大版本之间找到一个好的提交，我会放弃使用 git bisect。因为太久远的提交可能没有意义。而且随着我们忽略的提交越多，越可能出现其他不相关的问题。
+这里我有一个简单的选择方式。LLVM 的 tag 有一个创建规则，我们在创建新的 release 分支时，同时创建一个提高大版本的 tag，这个 tag 规则为 &lt;code&gt;llvmorg-{version}-init&lt;&#x2F;code&gt;，这类 tag 的关系是线性的，对于 bisect 非常友好。
+我会把 &lt;code&gt;llvmorg-18-init&lt;&#x2F;code&gt; 和 &lt;code&gt;llvmorg-17.0.1&lt;&#x2F;code&gt; 当作一致的代码。&lt;&#x2F;p&gt;
+&lt;p&gt;这里我们选择的对比版本为：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;好的提交: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;b0daacf58f417634f7c7c9496589d723592a8f5a&quot;&gt;b0daacf5&lt;&#x2F;a&gt;，这是 &lt;code&gt;llvmorg-17-init&lt;&#x2F;code&gt; 的前一个提交，和 &lt;code&gt;llvmorg-16.0.0&lt;&#x2F;code&gt; 相似。由于 rust 使用版本号适配 LLVM 的 API 变更，我们需要保持和 API 一致的版本号。&lt;&#x2F;li&gt;
+&lt;li&gt;坏的提交: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;d0b54bb50e5110a004b41fc06dadf3fee70834b7&quot;&gt;d0b54bb5&lt;&#x2F;a&gt;。&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;zhun-bei-llvm-de-gou-jian-pei-zhi&quot;&gt;准备 LLVM 的构建配置&lt;&#x2F;h2&gt;
+&lt;p&gt;由于每一步的 bisect 要花很长时间，首先我推荐使用更高性能的计算机缩短这个时间。&lt;&#x2F;p&gt;
+&lt;p&gt;然后修改 &lt;code&gt;config.toml&lt;&#x2F;code&gt; 减少重复构建时间，我的修改如下：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;submodules &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[llvm]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;download-ci-llvm &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ccache &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;sccache&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;X86&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;experimental-targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[target.x86_64-unknown-linux-gnu]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# 使用 bisect 后 patch 的 commit 会被移除
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;llvm-has-rust-patches &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;256
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;同时修改 &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;jian-shao-pgo-chu-li-de-han-shu&quot;&gt;减少 PGO 处理的函数&lt;&#x2F;h2&gt;
+&lt;p&gt;这即可以减少构建时间，也可以进一步明确问题所在。&lt;&#x2F;p&gt;
+&lt;p&gt;我们修改 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;blob&#x2F;llvmorg-17.0.2&#x2F;llvm&#x2F;lib&#x2F;Transforms&#x2F;Instrumentation&#x2F;PGOInstrumentation.cpp#L1761&quot;&gt;PGOInstrumentation.cpp#L1761&lt;&#x2F;a&gt; 的过滤规则，比如：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;skipPGO&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; Function &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;F&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cast_from_float&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;zhi-xing-git-bisect&quot;&gt;执行 git bisect&lt;&#x2F;h2&gt;
+&lt;p&gt;和标准的 LLVM 工程的 bisect 过程有些不同。当遇到 &lt;code&gt;PassWrapper.cpp&lt;&#x2F;code&gt; 编译失败时，我们需要手动适配 API 变更。而不是使用 &lt;code&gt;git bisect skip&lt;&#x2F;code&gt;。
+由于要频繁修改 &lt;code&gt;PassWrapper.cpp&lt;&#x2F;code&gt;，我们不能使用 &lt;code&gt;git bisect run&lt;&#x2F;code&gt; 自动完成这一过程，只能手动执行并检查每次的结果。运气好的话，不超过 12 次就可以得到结果。&lt;&#x2F;p&gt;
+&lt;p&gt;经过一段时间的运行，我获得的 bisect 结果是 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;361464c027239a70d66fb7790032b23696d5b303&quot;&gt;361464c0&lt;&#x2F;a&gt;。
+由于 LLVM 非常复杂，我还一般不能直接从这一提交中判断问题所在，同时这个提交未必是有问题的提交。&lt;&#x2F;p&gt;
+&lt;p&gt;我一般将 bisect 结果分为几类：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;这是一个导致错误编译发生的独立 commit&lt;&#x2F;li&gt;
+&lt;li&gt;提交了一些误导信息，导致后面的 Pass 产生了“错误”编译（这是第一个问题的类型）&lt;&#x2F;li&gt;
+&lt;li&gt;只是巧合，为后面的错误编译的 Pass 提供了匹配的输入或者是暴露了已有的错误编译（这是第二个问题的类型）&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;不过此时我们还无法给这次的结果进行分类。但我们可以使用这个结果继续调试定位。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;tong-guo-xiu-gai-llvm-yuan-ma-ding-wei-gan-xing-qu-de-zhuan-huan&quot;&gt;通过修改 LLVM 源码定位感兴趣的转换&lt;&#x2F;h1&gt;
+&lt;p&gt;此时我们不知道错误编译在哪里，我们无法通过直接获取一个 IR 调试。在有明确的结论前，我们仍然编译运行 rustc 定位问题。&lt;&#x2F;p&gt;
+&lt;p&gt;根据 bisect 结果，&lt;strong&gt;我们需要找到是哪个函数经过 &lt;code&gt;processImmutArgument&lt;&#x2F;code&gt; 后，最终出现错误编译。&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;使用类似下面的代码可以帮助我们逐步定位哪个函数被影响了。&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span&gt;MemCpyOptPass::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;processImmutArgument&lt;&#x2F;span&gt;&lt;span&gt;(CallBase &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CB&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsigned &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ArgNo&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;auto&lt;&#x2F;span&gt;&lt;span&gt; FnName = CB.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getFunction&lt;&#x2F;span&gt;&lt;span&gt;()-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;        FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;CompileTimeInterpreter&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;        FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)) {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Skip &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; FnName &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;通过日志我可以发现在 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 中影响的函数是：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;&amp;lt;rustc_const_eval::interpret::eval_context::InterpCx&amp;lt;rustc_const_eval::const_eval::machine::CompileTimeInterpreter&amp;gt;&amp;gt;::float_to_float_or_int
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;从日志中我发现这个函数完成了多次 &lt;code&gt;memcpy&lt;&#x2F;code&gt; 转换。&lt;&#x2F;p&gt;
+&lt;p&gt;所以我们可以继续过滤找到是哪一次转换导致了这个问题。&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;auto&lt;&#x2F;span&gt;&lt;span&gt; FnName = CB.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getFunction&lt;&#x2F;span&gt;&lt;span&gt;()-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span&gt; IsKeyFunction = FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;                     FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;CompileTimeInterpreter&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;                     FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!IsKeyFunction)
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static int&lt;&#x2F;span&gt;&lt;span&gt; Count = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;Count += &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(Count != &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Skip &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; Count &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Use &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; Count &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;当我走到这一步时，我开始怀疑这次错误编译和 PGO 无关。此时我尝试取消 PGO 也可以复现该问题。
+我猜测 PGO 只是一个巧合，将这个错误编译暴露到运行时。
+但我们还不知道 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 是那种类型，可能是新的巧合，也可能是错误编译，或者是误导了后续 Pass。 &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;shi-yong-opt-bisect-limit&quot;&gt;使用 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;我们可以使用 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 定位是哪个 Pass 修改指令导致运行时出现问题。&lt;&#x2F;p&gt;
+&lt;p&gt;使用 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 发现的 Pass 有两种类型：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;前面的 pass 执行了正确的转换，但是没有及时更新 metadata 等信息，导致找到的 Pass 出现问题&lt;&#x2F;li&gt;
+&lt;li&gt;找到的 Pass 本身存在错误编译&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;wei-te-ding-crate-zhi-xing-opt-bisect-limit&quot;&gt;为特定 crate 执行 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;小插曲：本次真实调试的过程是通过修改 &lt;code&gt;OptBisect.cpp&lt;&#x2F;code&gt; 完成的。但在写这篇文章时，我发现了更简单高效的方法。&lt;&#x2F;p&gt;
+&lt;p&gt;如果我们直接通过 &lt;code&gt;RUSTFLAGS_NOT_BOOTSTRAP&lt;&#x2F;code&gt; 设置 &lt;code&gt;-Cllvm-args=-opt-bisect-limit=-1&lt;&#x2F;code&gt; 将得到大量的无效日志。我们希望只应用到 &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;nightly 版本的 &lt;code&gt;cargo&lt;&#x2F;code&gt; 提供了这个功能。我们需要先切换到 nightly。修改如下：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;lt;path to home&amp;gt;&#x2F;.rustup&#x2F;toolchains&#x2F;nightly-x86_64-unknown-linux-gnu&#x2F;bin&#x2F;cargo&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;然后更新 &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;。&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo-features &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;profile-rustflags&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ...
+&lt;&#x2F;span&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustflags &lt;&#x2F;span&gt;&lt;span&gt;= [
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;llvm-args=-opt-bisect-limit=-1&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;,
+&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;接下来我们可以使用 &lt;code&gt;--keep-stage&lt;&#x2F;code&gt; 构建：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage&lt;&#x2F;span&gt;&lt;span&gt; 0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage-std&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; build.log
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;test.rs
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;最终我的 bisect 结果为：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (560953) MemCpyOptPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: running pass (560954) DSEPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (560955) MoveAutoInitPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;有一个让我感觉奇怪的地方是，如果我设置 limit 为 &lt;code&gt;560953&lt;&#x2F;code&gt;，结果不会停到 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt;。这是个奇怪的结果让本次的 bisect 结果有些不可信。&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (560953) BDCEPass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;不过我们可以使用类似的方法验证问题是否与 &lt;code&gt;DSEPass&lt;&#x2F;code&gt; 有关，通过修改代码跳过 &lt;code&gt;DSEPass&lt;&#x2F;code&gt; 即可。
+接下来和调试 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 一样，我们可以找到具体是哪个指令 &lt;code&gt;DSEPass&lt;&#x2F;code&gt; 转换导致了最终的错误编译。&lt;&#x2F;p&gt;
+&lt;p&gt;更新：为了让 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 的结果更稳定，我们可以试试 &lt;code&gt;-Z no-parallel-llvm&lt;&#x2F;code&gt;。另外，&lt;code&gt;rustc&lt;&#x2F;code&gt; 默认会尝试执行 ThinLTO，可以通过 &lt;code&gt;-C lto=false&lt;&#x2F;code&gt; 关闭。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;huo-qu-ir-zhun-bei-llvm-de-diao-shi&quot;&gt;获取 IR 准备 LLVM 的调试&lt;&#x2F;h1&gt;
+&lt;p&gt;这部分涉及到 LLVM 的具体调试，我暂时还没有什么好的经验分享。&lt;&#x2F;p&gt;
+&lt;p&gt;但重要的两点是：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;我们知道了在 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 中，具体是哪次转换影响了结果&lt;&#x2F;li&gt;
+&lt;li&gt;我们也知道了在 &lt;code&gt;DSEPass&lt;&#x2F;code&gt; 中，具体是哪次转换导致了最终的错误编译&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;通过这两此转换，我们就可以使用 &lt;code&gt;opt&lt;&#x2F;code&gt; 调试 IR 了。我们不需要再使用 &lt;code&gt;rustc&lt;&#x2F;code&gt; 频繁编译了！&lt;&#x2F;p&gt;
+&lt;p&gt;对于获取 IR 的方式我推荐通过修改 &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt; 获得：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustflags &lt;&#x2F;span&gt;&lt;span&gt;= [
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;save-temps&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;,
+&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;然后找到 &lt;code&gt;*.no-opt.bc&lt;&#x2F;code&gt; 进行调试。&lt;&#x2F;p&gt;
+&lt;p&gt;当然在这个调试过程，我们需要知道 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 和 &lt;code&gt;DSEPass&lt;&#x2F;code&gt; 的具体两个转换的逻辑。在这里我们会了解到这是通过别名分析进行的转换，最终定位到 &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; 在替换指令使用的值时，没有更新对应的别名信息。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;xia-yi-ge-wen-ti-mir-niche-checks&quot;&gt;下一个问题 - mir niche checks&lt;&#x2F;h1&gt;
+&lt;p&gt;尽管这个问题的复现比前者要简单，但定位起来会更麻烦。
+首先让我们切换到 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;cf8d85e49c6f3a5802549055f983fd0ba3f89952&quot;&gt;cf8d85e4&lt;&#x2F;a&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;使用 &lt;code&gt;--stage 2&lt;&#x2F;code&gt; 执行测试即可复现：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; test tests&#x2F;ui&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;config.toml&lt;&#x2F;code&gt; 参考：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profile &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;codegen&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[llvm]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;enable-warnings &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;download-ci-llvm &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ccache &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;sccache&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;X86&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;experimental-targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;link-shared &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;use-linker &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;lld&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;release-debuginfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;incremental &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-logging &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;deny-warnings &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-backends &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;llvm&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;use-lld &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;lto &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;off&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-assertions-std &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;错误日志如下：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;thread &amp;#39;rustc&amp;#39; panicked at compiler&#x2F;rustc_mir_build&#x2F;src&#x2F;thir&#x2F;pattern&#x2F;deconstruct_pat.rs:560:22:
+&lt;&#x2F;span&gt;&lt;span&gt;occupied niche: found 0x7f7700000000 but must be in 0x0..=0x2 in type std::option::Option&amp;lt;thir::pattern::deconstruct_pat::SliceKind&amp;gt; at offset 0 with type Int(I64, false)
+&lt;&#x2F;span&gt;&lt;span&gt;stack backtrace:
+&lt;&#x2F;span&gt;&lt;span&gt;  ...
+&lt;&#x2F;span&gt;&lt;span&gt;  13:     0x7f77e92ade54 - &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::Constructor&amp;gt;::split::&amp;lt;core[8d828210e7f791ba]::iter::adapters::map::Map&amp;lt;core[8d828210e7f791ba]::iter::adapters::map::Map&amp;lt;core[8d828210e7f791ba]::slice::iter::Iter&amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::PatStack&amp;gt;, &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::Matrix&amp;gt;::heads::{closure#0}&amp;gt;, &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::DeconstructedPat&amp;gt;::ctor&amp;gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我发现如果设置 &lt;code&gt;codegen-units=1&lt;&#x2F;code&gt;，这个 panic 就会消失。
+那么我们正好可以借助 &lt;code&gt;codegen-units&lt;&#x2F;code&gt; 判断是哪个 crate 被影响了。根据堆栈猜测是 &lt;code&gt;rustc_mir_build&lt;&#x2F;code&gt;，尝试切换 &lt;code&gt;codegen-units=1&lt;&#x2F;code&gt; 验证。
+由于这个问题发生和上一个时间点基本一致，我们使用相同的 LLVM 提交作为 bisect 开始。
+遗憾的是，如果设置 &lt;code&gt;optimize=3&lt;&#x2F;code&gt;，我们无法在 LLVM 16 找到一个好的提交。但我还尝试了设置 &lt;code&gt;optimize=2&lt;&#x2F;code&gt; 可以找到 LLVM 16 是好的提交。&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;ji-shou-de-git-bisect&quot;&gt;棘手的 git bisect&lt;&#x2F;h2&gt;
+&lt;p&gt;在 bisect 过程中，我得到一个意外结果：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;---- [ui] tests&#x2F;ui&#x2F;issue-11881.rs stdout ----
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;error: test compilation failed although it shouldn&amp;#39;t!
+&lt;&#x2F;span&gt;&lt;span&gt;status: exit status: 1
+&lt;&#x2F;span&gt;&lt;span&gt;command: RUSTC_ICE=&amp;quot;0&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage2&#x2F;bin&#x2F;rustc&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs&amp;quot; &amp;quot;-Zthreads=1&amp;quot; &amp;quot;-Zsimulate-remapped-rust-src-base=&#x2F;rustc&#x2F;FAKE_PREFIX&amp;quot; &amp;quot;-Ztranslate-remapped-path-to-local-path=no&amp;quot; &amp;quot;-Z&amp;quot; &amp;quot;ignore-directory-in-diagnostics-source-blocks=&#x2F;home&#x2F;dianqk&#x2F;.cargo&amp;quot; &amp;quot;--sysroot&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage2&amp;quot; &amp;quot;--target=x86_64-unknown-linux-gnu&amp;quot; &amp;quot;-O&amp;quot; &amp;quot;--error-format&amp;quot; &amp;quot;json&amp;quot; &amp;quot;--json&amp;quot; &amp;quot;future-incompat&amp;quot; &amp;quot;-Ccodegen-units=1&amp;quot; &amp;quot;-Zui-testing&amp;quot; &amp;quot;-Zdeduplicate-diagnostics=no&amp;quot; &amp;quot;-Zwrite-long-types-to-disk=no&amp;quot; &amp;quot;-Cstrip=debuginfo&amp;quot; &amp;quot;-C&amp;quot; &amp;quot;prefer-dynamic&amp;quot; &amp;quot;-o&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;test&#x2F;ui&#x2F;issue-11881&#x2F;a&amp;quot; &amp;quot;-A&amp;quot; &amp;quot;internal_features&amp;quot; &amp;quot;-Crpath&amp;quot; &amp;quot;-Cdebuginfo=0&amp;quot; &amp;quot;-Lnative=&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;native&#x2F;rust-test-helpers&amp;quot; &amp;quot;-Clink-arg=-fuse-ld=lld&amp;quot; &amp;quot;-Clink-arg=-Wl,--threads=1&amp;quot; &amp;quot;-L&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;test&#x2F;ui&#x2F;issue-11881&#x2F;auxiliary&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;stdout: none
+&lt;&#x2F;span&gt;&lt;span&gt;--- stderr -------------------------------
+&lt;&#x2F;span&gt;&lt;span&gt;error: unexpected token: `&amp;amp;`
+&lt;&#x2F;span&gt;&lt;span&gt;  --&amp;gt; &#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs:18:25
+&lt;&#x2F;span&gt;&lt;span&gt;   |
+&lt;&#x2F;span&gt;&lt;span&gt;LL |     fn encode(&amp;amp;self, s: &amp;amp;mut S) -&amp;gt; Result&amp;lt;(), S::Error&amp;gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;   |                         ^ unexpected token after this
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;error: unexpected token: `&amp;amp;`
+&lt;&#x2F;span&gt;&lt;span&gt;  --&amp;gt; &#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs:33:23
+&lt;&#x2F;span&gt;&lt;span&gt;   |
+&lt;&#x2F;span&gt;&lt;span&gt;LL |     fn fmt(&amp;amp;self, _f: &amp;amp;mut fmt::Formatter&amp;lt;&amp;#39;_&amp;gt;) -&amp;gt; fmt::Result {
+&lt;&#x2F;span&gt;&lt;span&gt;   |                       ^ unexpected token after this
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;面对这个结果，我们不可使用 good&#x2F;bad 执行 bisect，这将 bisect 导向错误的结果。&lt;&#x2F;p&gt;
+&lt;p&gt;遗憾的是，即便使用 skip，我们也无法得到 bisect 结果。
+当 bisect 在 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;compare&#x2F;f7deb69f22b93d7411d08db14b50aae5caf40fcb...7c78cb4b1f4993a84bf2b46b197d90dcabb9f8c5&quot;&gt;f7deb69f2...7c78cb4b&lt;&#x2F;a&gt; 内部时，就可以得到这个预期之外的错误。如果是更早的提交，是 good，更晚的提交，是 bad。
+这是因为 &lt;code&gt;nonnull&lt;&#x2F;code&gt; 等语义的变更后引入了新的问题，我们在 bisect 期间忽略了一些问题修复，导致暴露了一个新的问题。&lt;&#x2F;p&gt;
+&lt;p&gt;此处提交历史如下：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;bad
+&lt;&#x2F;span&gt;&lt;span&gt;Revert &amp;quot;[SimplifyCFG][LICM] Preserve nonnull, range and align metadat…  7c78cb4
+&lt;&#x2F;span&gt;&lt;span&gt;skip
+&lt;&#x2F;span&gt;&lt;span&gt;[SimplifyCFG][LICM] Preserve nonnull, range and align metadata when s…  78b1fbc
+&lt;&#x2F;span&gt;&lt;span&gt;good
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;由于我们忽略了一些提交导致新问题发生，bisect 没有结果。
+幸运的是，这次的问题很特别的，我们可以使用 rebase 将 &lt;code&gt;78b1fbc&lt;&#x2F;code&gt; 和 &lt;code&gt;7c78cb4&lt;&#x2F;code&gt; drop 掉。&lt;&#x2F;p&gt;
+&lt;p&gt;最终 bisect 结果是 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;commit&#x2F;2f70f65246e987842cfae495839975eaa6245a0c&quot;&gt;[AggressiveInstCombine] Enable also for -O2&lt;&#x2F;a&gt;。
+我也通过修改代码找到了在 &lt;code&gt;AggressiveInstCombine&lt;&#x2F;code&gt; 的关键转换，但从代码和 IR 上，我看不出什么问题。可能是我疏漏了什么，也可能是这只是个幸运的触发机会。
+我们需要记住这个怀疑点，继续排查。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;codegen-units-256-opt-bisect-limit-n&quot;&gt;&lt;code&gt;codegen-units=256&lt;&#x2F;code&gt; &amp;amp; &lt;code&gt;-opt-bisect-limit=n&lt;&#x2F;code&gt;&lt;&#x2F;h1&gt;
+&lt;p&gt;这次我们没有办法使用 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;，因为 &lt;code&gt;codegen-units&lt;&#x2F;code&gt; 不等于 1。 
+同时对多个 IR 进行 bisect 没有意义。我们需要修改 rust 代码支持在多个 CGU 下选择特定的 CGU 进行 bisect。&lt;&#x2F;p&gt;
+&lt;p&gt;首先使用 &lt;code&gt;-C save-temps&lt;&#x2F;code&gt; 找到对应的 IR。修改方式参考 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;bfd759b704b77d0ff390cc172a62c3d9a0c36986&quot;&gt;bfd759b7&lt;&#x2F;a&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;小插曲：这里我也尝试了在 AggressiveInstCombine 中寻找有影响的那一次转换。很头痛的是，添加 &lt;code&gt;-C save-temps&lt;&#x2F;code&gt; 后，符号名会变，这让我重新找了一下有关联的符号。&lt;&#x2F;p&gt;
+&lt;p&gt;我编写了一个简单的脚本找到这个 IR：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for&lt;&#x2F;span&gt;&lt;span&gt; bitcode &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt; build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage1-rustc&#x2F;x86_64-unknown-linux-gnu&#x2F;release&#x2F;deps&#x2F;rustc_mir_build-*-cgu.*.rcgu.no-opt.bc; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;llvm-nm -U &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bitcode &lt;&#x2F;span&gt;&lt;span&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;grep -q &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;example&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;then
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bitcode
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fi
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;done
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我查看了 &lt;code&gt;OptBisect&lt;&#x2F;code&gt; 的实现，尽管 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 参数是全局的，但我们可以为 CGU 单独替换一个空的 &lt;code&gt;OptBisect&lt;&#x2F;code&gt;。完整修改在 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;a9f62a4a634aef8f792e9cb6eb4573b4b9fc79d2&quot;&gt;a9f62a4a&lt;&#x2F;a&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;一些关键修改参考如下：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;struct &lt;&#x2F;span&gt;&lt;span&gt;RunAllOptPassGate : &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;public &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;OptPassGate &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;shouldRunPass&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;PassName&lt;&#x2F;span&gt;&lt;span&gt;, StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;IRDescription&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;override &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;isEnabled&lt;&#x2F;span&gt;&lt;span&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const override &lt;&#x2F;span&gt;&lt;span&gt;{ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;; }
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;getRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate RunAllOptPassGate;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;extern &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;LLVMRustContextSetSetRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;(LLVMContextRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;C&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span&gt;(C)-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;setOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;());
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我还增加了一个命令行参数 &lt;code&gt;-Z llvm-opt-bisect-limit-cgu&lt;&#x2F;code&gt;，这样我就可以使用下面的脚本进行 bisect：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;export &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;RUSTFLAGS_NOT_BOOTSTRAP&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C llvm-args=-opt-bisect-limit=-1 -Z llvm-opt-bisect-limit-cgu=rustc_mir_build.63d28fcded2a05ed-cgu.007&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage&lt;&#x2F;span&gt;&lt;span&gt; 0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage-std&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; build.log
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;tests&#x2F;ui&#x2F;consts&#x2F;const_prop_slice_pat_ice.rs
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我还编写了一个简单的自动 bisect 脚本：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;iterate&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span&gt;=`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sed -n &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1p&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; bisect_result`
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;=`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sed -n &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;2p&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; bisect_result`
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;result&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;((bad &lt;&#x2F;span&gt;&lt;span&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; good))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;good: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;, bad: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;[ &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;result -eq&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;then
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;done&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;exit&lt;&#x2F;span&gt;&lt;span&gt; 0
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;((good &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;(result &lt;&#x2F;span&gt;&lt;span&gt;&#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bash&lt;&#x2F;span&gt;&lt;span&gt; bisect.sh $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;?
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;case &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in
+&lt;&#x2F;span&gt;&lt;span&gt;            0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;            1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;            *&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;failed: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;exit&lt;&#x2F;span&gt;&lt;span&gt; 1
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;esac
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fi
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good &lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; bisect_result
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad &lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;&amp;gt; bisect_result
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;iterate
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sleep&lt;&#x2F;span&gt;&lt;span&gt; 1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;done
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;但我得到了一个奇怪的结果：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;ISECT: running pass (13444) InlinerPass on (symbol)
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (13445) PostOrderFunctionAttrsPass on (symbol)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我认为 inline 与这个错误编译无直接关系。
+我简单地修改了 &lt;code&gt;OptBisect.cpp&lt;&#x2F;code&gt; 跳过 &lt;code&gt;InlinerPass&lt;&#x2F;code&gt;：&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span&gt;OptBisect::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;shouldRunPass&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;PassName&lt;&#x2F;span&gt;&lt;span&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;                              StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;IRDescription&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(PassName == &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;InlinerPass&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;printPassMessage&lt;&#x2F;span&gt;&lt;span&gt;(PassName, -&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;, IRDescription, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;最终我得到：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (10040) CorrelatedValuePropagationPass on symbol
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (10041) SimplifyCFGPass on symbol
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;为了验证 &lt;code&gt;CorrelatedValuePropagationPass&lt;&#x2F;code&gt; 是否有关，仍然是通过删除不相关的代码，参见：&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;commit&#x2F;a08f2c14b1d501aa9b76b96e26c7366c5a6e6e9b&quot;&gt;a08f2c14&lt;&#x2F;a&gt;。
+我还添加了一行日志进行简单的验证：&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;LLVMLOG: Delete   %102 = and i64 %101, 4294967295   -&amp;gt; and i64 %101, 0xffffffff
+&lt;&#x2F;span&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;span&gt;occupied niche: found 0x7fba00000001 but must be in 0x0..=0x2 in type std::option::Option&amp;lt;thir::pattern::deconstruct_pat::SliceKind&amp;gt; at offset 0 with type Int(I64, false)
+&lt;&#x2F;span&gt;&lt;span&gt;0x7fba00000001 &amp;amp; 0xffffffff = 0x1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;我敢肯定这就是我们要找的！这和 rustc 的 panic 日志有非常大的相关性。
+最终我发现 &lt;code&gt;%101&lt;&#x2F;code&gt; 在特定的控制流下，可能获得 &lt;code&gt;undef&lt;&#x2F;code&gt; 结果。在这种情况下，我们不应该删除 &lt;code&gt;%102&lt;&#x2F;code&gt;。&lt;&#x2F;p&gt;
+&lt;p&gt;这里我很好奇为什么会和 &lt;code&gt;AggressiveInstCombine&lt;&#x2F;code&gt; 有关，如果我们去掉这个 Pass，要删除的指令变为 &lt;code&gt;%123 = and i64 %122, 72057594037927935(0xffffffffffffff)&lt;&#x2F;code&gt;。我们仍然不能删除这个指令，只是这个巨大的数值让程序在运行期间很难遇到。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;zong-jie&quot;&gt;总结&lt;&#x2F;h1&gt;
+&lt;p&gt;我们比较了什么？&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;通过比较不同 &lt;code&gt;codegen-units&lt;&#x2F;code&gt;，定位被影响的 crate&lt;&#x2F;li&gt;
+&lt;li&gt;通过添加 &lt;code&gt;[inline(never)]&lt;&#x2F;code&gt; 比较结果，定位被影响的函数&lt;&#x2F;li&gt;
+&lt;li&gt;通过 git bisect 定位是哪个 commit 影响了结果&lt;&#x2F;li&gt;
+&lt;li&gt;通过修改代码，定位是哪次转换影响了结果&lt;&#x2F;li&gt;
+&lt;li&gt;通过 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 结果定位有关联的 Pass&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;我通过这些方法逐渐接近真相。对了，运气也很重要，我没有记录我走错路的经历 :]。&lt;&#x2F;p&gt;
+&lt;p&gt;在这些方法中，我也介绍了一些具体技巧：&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;git bisect 拿不到结果时可以通过移除一些 commit 找到结果（这可能只是特定场景的技巧）&lt;&#x2F;li&gt;
+&lt;li&gt;cargo 提供了应用 rustc 参数到指定 crate 的功能&lt;&#x2F;li&gt;
+&lt;li&gt;修改 rustc 代码，将 &lt;code&gt;opt-bisect-limit&lt;&#x2F;code&gt; 应用到具体的 CGU，让这个功能在大型项目上应当很有用&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;解决这类问题概括流程是：&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;首先想办法缩短单次复现的时间，太长的调试时间令人恼火&lt;&#x2F;li&gt;
+&lt;li&gt;关键目标是&lt;strong&gt;通过上述比较方法，找到导致错误编译的关键转换&lt;&#x2F;strong&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;提取 IR，根据关键转换定位问题&lt;&#x2F;li&gt;
+&lt;li&gt;修复问题&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;暂时我还没有第三步骤的心得与经验，但我会使用 &lt;code&gt;llvm-extract&lt;&#x2F;code&gt; 和 &lt;code&gt;llvm-reduce&lt;&#x2F;code&gt; 减少获得的 IR，这对于调试会有些帮助。 
+我也会使用 &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; 提取中间过程的 IR，并手动删除一些函数或指令定位问题。&lt;&#x2F;p&gt;
+&lt;p&gt;对于如何提交一个合适的修复，我还没有清晰的思路，目前我很少做到无修改获得 LGTM 的 PR。我还需要更多的学习与实践 ;)。&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;can-kao&quot;&gt;参考&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;compiler-debugging.html&quot;&gt;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;compiler-debugging.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;backend&#x2F;debugging.html&quot;&gt;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;backend&#x2F;debugging.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;llvm.org&#x2F;docs&#x2F;GitBisecting.html&quot;&gt;https:&#x2F;&#x2F;llvm.org&#x2F;docs&#x2F;GitBisecting.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;cargo&#x2F;reference&#x2F;unstable.html#profile-rustflags-option&quot;&gt;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;cargo&#x2F;reference&#x2F;unstable.html#profile-rustflags-option&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.llvm.org&#x2F;docs&#x2F;AliasAnalysis.html&quot;&gt;https:&#x2F;&#x2F;www.llvm.org&#x2F;docs&#x2F;AliasAnalysis.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;rustc&#x2F;codegen-options&#x2F;index.html#lto&quot;&gt;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;rustc&#x2F;codegen-options&#x2F;index.html#lto&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+</feed>

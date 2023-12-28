@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>2023 总结 &middot; 靛青博客</title>
+    <meta name="description" content="
+
+  今年是我第一年持续参与开源贡献工作，我修复了许多错误编译，也增加了一些缺失的优化。还有一些我不知道如何归类，涉及各种内容，比如 LTO、DebugInfo，内置函数和 WebAssembly，甚至还有 Apple Silicon 相关。
+
+" />
+    <link rel="shortcut icon"  href="https://dianqk.blog/favicon.ico" />
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://dianqk.blog/zh/atom.xml"><link rel="me" href="https:&#x2F;&#x2F;mastodon.online&#x2F;@dianqk" /><style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="靛青博客">
+      
+      <meta property="og:title" content="2023 总结">
+      <meta property="og:description" content="今年是我第一年持续参与开源贡献工作，我修复了许多错误编译，也增加了一些缺失的优化。还有一些我不知道如何归类，涉及各种内容，比如 LTO、DebugInfo，内置函数和 WebAssembly，甚至还有 Apple Silicon 相关。">
+      <meta property="og:url" content="https://dianqk.blog/zh/2023-summary/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-10-28T00:00:00+00:00" />
+
+      
+      
+    
+
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://dianqk.blog/zh/" title="Home">靛青博客</a>
+          <br /><small></small>
+        </h3>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>2023 总结</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-10-28T00:00:00+00:00">October 28, 2023</time></p>
+  
+
+  <h1 id="gai-gua">概括</h1>
+<p>今年是我第一年持续参与开源贡献工作，我修复了许多错误编译，也增加了一些缺失的优化。还有一些我不知道如何归类，涉及各种内容，比如 LTO、DebugInfo，内置函数和 WebAssembly，甚至还有 Apple Silicon 相关。</p>
+<p><strong>在这个过程中，我得到了许多的人的帮助，尤其是审核我的 PR 的人，非常感谢。(●´∀｀●)</strong></p>
+<p>一些值得注意的内容：</p>
+<ul>
+<li>我搞清楚了一个长期存在的 LTO 下调试信息损坏的问题</li>
+<li>我将 Rust 中内置函数的 crate 也添加进 LTO，这也是一个长期存在的问题</li>
+<li>为了更方便的交流，我给自己起了一个英文名：Quentin Dian</li>
+</ul>
+<p>我使用这些表情对相关工作进行分类：</p>
+<ul>
+<li>💢 指错误编译</li>
+<li>🍻 补充缺失的优化</li>
+<li>ℹ️ 与调试有关</li>
+<li>🦀 与 Rust 有关</li>
+<li>🐉 与 LLVM 有关</li>
+<li>🐦 与 Swift 有关</li>
+<li>🍎 与 Apple 有关</li>
+<li>⏳ 被其他问题阻塞</li>
+</ul>
+<h1 id="llvm">LLVM</h1>
+<p>提交记录：<a href="https://github.com/llvm/llvm-project/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31">https://github.com/llvm/llvm-project/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31</a>。</p>
+<p>对了，我的第一个 LLVM 提交是：<a href="https://github.com/llvm/llvm-project/commit/1e9fa0b12a7619add4a259f80315f984b5f7e2ce">[MachineOutliner] Fix the side effect of outlined function when the register is implicit use and implicit-def in the same instruction. D112911</a>。</p>
+<ol>
+<li>🍻🦀⏳ <a href="https://github.com/llvm/llvm-project/commit/b6a0be8ce3114d0c57e7a7d6c3c222986ca506ad">[SimplifyCFG] Check if the return instruction causes undefined behavior D144319</a> 被 <a href="https://github.com/llvm/llvm-project/pull/69498">PR69498</a> 阻塞</li>
+<li>🍻⏳ <a href="https://github.com/llvm/llvm-project/commit/f890f010f6a70addbd885acd0c8d1b9578b6246f">[SimplifyCFG] Improve the precision of <code>PtrValueMayBeModified</code> D144563</a> 跟随 D144319 的提交，尽管这没有被  <a href="https://github.com/llvm/llvm-project/pull/69498">PR69498</a> 阻塞</li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/2832d7941f4207f1fcf813b27cf08cecc3086959">[SROA] Remove UB-implying metadata when promoting speculative instruction. D148456</a> 修复 <a href="https://github.com/rust-lang/rust/issues/110256">PR110256</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/533b7c1f6c696817df332cc7c9acbe3b454eadf2">[GlobalOpt] Don't replace the aliasee if it has other references. D145293</a> 修复 <a href="https://github.com/rust-lang/rust/issues/108030">PR108030</a></li>
+<li>🦀🐦ℹ️ <a href="https://github.com/llvm/llvm-project/commit/2ee4d0386c783f58abe708298228de648239b435">[Verifier] definition subprograms cannot be nested within DICompositeType when enabling ODR. D152095</a></li>
+<li>🐦ℹ️ <a href="https://github.com/llvm/llvm-project/commit/ca1a5b37c7236dd29a3169859153dfdcce066b51">[Coroutine][DebugInfo] Update the linkage name of the declaration of coro-split functions in the debug info. D157184</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/c3f227ead65c606409ff8cc3333a6c751f156a9c">[TailCallElim] Remove the readonly attribute of byval. D156793</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/65219">[JumpThreading] Invalidate LVI after combineMetadataForCSE. #65219</a></li>
+<li>🍻🦀 <a href="https://github.com/llvm/llvm-project/pull/65875">[EarlyCSE] Compare GEP instructions based on offset #65875</a></li>
+<li>🍻🦀 <a href="https://github.com/llvm/llvm-project/pull/67077">[SimplifyCFG] Hoist common instructions on switch #67077</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/67539">[MemCpyOpt] Merge alias metadatas when replacing arguments #67539</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/68190">[LVI][CVP] Treat undef like a full range #68190</a></li>
+<li>💢 <a href="https://github.com/llvm/llvm-project/pull/68711">[LVI][CVP] Treat undef like a full range on abs(x, false) #68711</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/70580">[MemCpyOpt] Combine alias metadatas when replacing byval arguments #70580</a></li>
+<li>💢🦀🍎 <a href="https://github.com/llvm/llvm-project/pull/75184">[AArch64] ORRWrs is copy instruction when there's no implicit def of the X register #75184</a></li>
+</ol>
+<h1 id="rust">Rust</h1>
+<p>提交记录：<a href="https://github.com/rust-lang/rust/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31">https://github.com/rust-lang/rust/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31</a></p>
+<p>除了更新测试用例等简单 PR，其他都是围绕 builtins &amp; LTO 的 PR：</p>
+<ol>
+<li><a href="https://github.com/rust-lang/rust/pull/113716">Add the <code>no-builtins</code> attribute to functions when <code>no_builtins</code> is applied at the crate level. #113716</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/113923">Restore <code>#![no_builtins]</code> crates participation in LTO. #113923</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/118036">Add thinlto support to codegen, assembly and coverage tests #118036</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/118568">Avoid adding builtin functions to <code>symbols.o</code> #118568</a></li>
+</ol>
+<p>尽管在这个过程中解决了很多问题，不幸的是，仍然有一些<a href="https://github.com/rust-lang/rust/issues/118609">已知问题</a>需要解决。在解决这些问题之后，我会提交相关的 MCP。</p>
+<h1 id="ruslin">Ruslin</h1>
+<p>我使用 Joplin 记笔记，但我不喜欢 Joplin 的 Android 客户端。为此我编写了一个兼容的客户端：<a href="https://github.com/ruslin-note/ruslin-android">ruslin-android</a>。很抱歉最近一直没有更新，我会在明年尝试调整一下我的业余时间。事实上我也在考虑桌面端的开发。</p>
+<h1 id="qi-ta-xiang-mu">其他项目</h1>
+<ul>
+<li>ℹ️🍎 <a href="https://github.com/apple/swift/pull/67077">[swift][IRGen][DebugInfo] split method declaration and definition. #67077</a></li>
+<li>ℹ️🍎 <a href="https://github.com/apple/swift/pull/67592">[swift][Backtracing][Linux] Support the <code>DW_AT_specification</code> attribute. #67592 </a></li>
+<li>🦀 <a href="https://github.com/wasm3/wasm3/pull/436">[wasm3] Fix the issue of incorrectly freeing the stack address when unwinding local functions. #436</a></li>
+<li>🦀 <a href="https://github.com/DioxusLabs/dioxus/pull/1112">[dioxus] Fix the issue of duplicate unique ID for atoms using <code>newtype</code>. #1112</a></li>
+</ul>
+<h1 id="ge-ren-xiang-guan">个人相关</h1>
+<p>DianQK 只是我随意起得中文笔名靛（Dian）青（Qing）K的拼音缩写，靛青指 indigo。这导致大家不知道该如何称呼我。为此我向 ChatGPT 询问了一个名字：Quentin Dian。所以你可以叫我 Dian 或者 dianqk 都可以。</p>
+<p>曾经我一直在使用 Arch Linux，现在我全部切换到了 NixOS，这是个很棒的操作系统，我可以用代码管理一切。</p>
+<p>为了提高我的效率，我还购买了 GPD 掌机，上面的大部分代码都是我在地铁上使用 GPD 完成的。我还组装了一台 7950X 主机，这将我的本地构建时间缩短了一半，我可以在几分钟之内完成一次全量编译。我还买了一台 Mac mini（M2），这样我就可以测试这个平台的问题了。</p>
+<p><img src="/2023-10-28-summary-gpd.jpg" alt="GPG Win 4" /></p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+          
+            <a href="https://dianqk.blog/zh/about">关于</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://dianqk.blog/zh/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://github.com/DianQK/dianqk.blog">Github 源码</a>
+            
+          
+        </nav>
+        
+        
+        <small>Built with <a href="https://www.getzola.org/">Zola</a>.<br />
+          Maintained with &hearts; for the web.<br />
+          
+        </small>
+        
+      </footer>
+      
+
+    </main>
+    
+    
+  </body>
+</html>
+

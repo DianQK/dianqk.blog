@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title>dianqk&#x27;s blog</title>
+    <link href="https://dianqk.blog/atom.xml" rel="self" type="application/atom+xml"/>
+    <link href="https://dianqk.blog"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2023-10-28T00:00:00+00:00</updated>
+    <id>https://dianqk.blog/atom.xml</id>
+    <entry xml:lang="en">
+        <title>2023 Summary</title>
+        <published>2023-10-28T00:00:00+00:00</published>
+        <updated>2023-10-28T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://dianqk.blog/2023-summary/" type="text/html"/>
+        <id>https://dianqk.blog/2023-summary/</id>
+        
+        <content type="html">&lt;h1 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h1&gt;
+&lt;p&gt;This year marks my first continuous involvement in open-source contributions. I&#x27;ve fixed numerous mis-compilation, added missing optimizations, and included LTO, debugging info, built-in functions, WebAssembly, and even an issue with Apple Silicon.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;During this journey, I was fortunate to receive numerous invaluable help, especially from those who reviewed my pull requests. Thank everyone very much. (●´∀｀●)&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Highlight:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Resolving a long-standing issue causing debugging info corruption under LTO.&lt;&#x2F;li&gt;
+&lt;li&gt;Adding the crate for built-in functions to LTO in Rust, addressing another long-standing issue.&lt;&#x2F;li&gt;
+&lt;li&gt;Adopting the English name &amp;quot;Quentin Dian&amp;quot; for better communication.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I&#x27;ve categorized my contributions using these emojis:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;💢 Mis-compilation&lt;&#x2F;li&gt;
+&lt;li&gt;🍻 Missing optimization&lt;&#x2F;li&gt;
+&lt;li&gt;ℹ️ Debugging info&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 Rust-related&lt;&#x2F;li&gt;
+&lt;li&gt;🐉 LLVM-related&lt;&#x2F;li&gt;
+&lt;li&gt;🐦 Swift-related&lt;&#x2F;li&gt;
+&lt;li&gt;🍎 Apple-related&lt;&#x2F;li&gt;
+&lt;li&gt;⏳ Blocked by other issues&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;llvm&quot;&gt;LLVM&lt;&#x2F;h1&gt;
+&lt;p&gt;Commit history: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;By the way, my first LLVM commit was &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;1e9fa0b12a7619add4a259f80315f984b5f7e2ce&quot;&gt;[MachineOutliner] Fix the side effect of outlined function when the register is implicit use and implicit-def in the same instruction. D112911&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;🍻🦀⏳ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;b6a0be8ce3114d0c57e7a7d6c3c222986ca506ad&quot;&gt;[SimplifyCFG] Check if the return instruction causes undefined behavior D144319&lt;&#x2F;a&gt; Blocked by &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;69498&quot;&gt;PR69498&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🍻⏳ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;f890f010f6a70addbd885acd0c8d1b9578b6246f&quot;&gt;[SimplifyCFG] Improve the precision of &lt;code&gt;PtrValueMayBeModified&lt;&#x2F;code&gt; D144563&lt;&#x2F;a&gt; Follows D144319, not blocked by &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;69498&quot;&gt;PR69498&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;2832d7941f4207f1fcf813b27cf08cecc3086959&quot;&gt;[SROA] Remove UB-implying metadata when promoting speculative instruction. D148456&lt;&#x2F;a&gt; Fixes &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;110256&quot;&gt;PR110256&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;533b7c1f6c696817df332cc7c9acbe3b454eadf2&quot;&gt;[GlobalOpt] Don&#x27;t replace the aliasee if it has other references. D145293&lt;&#x2F;a&gt; Fixes &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;108030&quot;&gt;PR108030&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀🐦ℹ️ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;2ee4d0386c783f58abe708298228de648239b435&quot;&gt;[Verifier] definition subprograms cannot be nested within DICompositeType when enabling ODR. D152095&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🐦ℹ️ &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;ca1a5b37c7236dd29a3169859153dfdcce066b51&quot;&gt;[Coroutine][DebugInfo] Update the linkage name of the declaration of coro-split functions in the debug info. D157184&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;c3f227ead65c606409ff8cc3333a6c751f156a9c&quot;&gt;[TailCallElim] Remove the readonly attribute of byval. D156793&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;65219&quot;&gt;[JumpThreading] Invalidate LVI after combineMetadataForCSE. #65219&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🍻🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;65875&quot;&gt;[EarlyCSE] Compare GEP instructions based on offset #65875&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🍻🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67077&quot;&gt;[SimplifyCFG] Hoist common instructions on switch #67077&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&quot;&gt;[MemCpyOpt] Merge alias metadatas when replacing arguments #67539&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&quot;&gt;[LVI][CVP] Treat undef like a full range #68190&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68711&quot;&gt;[LVI][CVP] Treat undef like a full range on abs(x, false) #68711&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;70580&quot;&gt;[MemCpyOpt] Combine alias metadatas when replacing byval arguments #70580&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;💢🦀🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;75184&quot;&gt;[AArch64] ORRWrs is copy instruction when there&#x27;s no implicit def of the X register #75184&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h1 id=&quot;rust&quot;&gt;Rust&lt;&#x2F;h1&gt;
+&lt;p&gt;Commit history: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;commits?author=DianQK&amp;amp;since=2023-01-01&amp;amp;until=2023-12-31&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Apart from simple pull requests like updating test cases, my contributions mainly revolved around built-ins and LTO:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;113716&quot;&gt;Add the &lt;code&gt;no-builtins&lt;&#x2F;code&gt; attribute to functions when &lt;code&gt;no_builtins&lt;&#x2F;code&gt; is applied at the crate level. #113716&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;113923&quot;&gt;Restore &lt;code&gt;#![no_builtins]&lt;&#x2F;code&gt; crates participation in LTO. #113923&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;118036&quot;&gt;Add thinlto support to codegen, assembly and coverage tests #118036&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;118568&quot;&gt;Avoid adding builtin functions to &lt;code&gt;symbols.o&lt;&#x2F;code&gt; #118568&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;Despite addressing many issues during this process, unfortunately, there are still some &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;118609&quot;&gt;known issues&lt;&#x2F;a&gt; that need resolution. I&#x27;ll submit MCP once these issues are resolved.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;ruslin&quot;&gt;Ruslin&lt;&#x2F;h1&gt;
+&lt;p&gt;I use Joplin for note-taking, but I don&#x27;t want Joplin&#x27;s Android client. Hence, I developed a compatible client: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ruslin-note&#x2F;ruslin-android&quot;&gt;ruslin-android&lt;&#x2F;a&gt;. I apologize for the lack of recent updates. I plan to adjust my spare time next year. I&#x27;m also considering desktop development.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;other-projects&quot;&gt;Other Projects&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;ℹ️🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;apple&#x2F;swift&#x2F;pull&#x2F;67077&quot;&gt;[swift][IRGen][DebugInfo] split method declaration and definition. #67077&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;ℹ️🍎 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;apple&#x2F;swift&#x2F;pull&#x2F;67592&quot;&gt;[swift][Backtracing][Linux] Support the &lt;code&gt;DW_AT_specification&lt;&#x2F;code&gt; attribute. #67592 &lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wasm3&#x2F;wasm3&#x2F;pull&#x2F;436&quot;&gt;[wasm3] Fix the issue of incorrectly freeing the stack address when unwinding local functions. #436&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;🦀 &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DioxusLabs&#x2F;dioxus&#x2F;pull&#x2F;1112&quot;&gt;[dioxus] Fix the issue of duplicate unique ID for atoms using &lt;code&gt;newtype&lt;&#x2F;code&gt;. #1112&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;personal-details&quot;&gt;Personal Details&lt;&#x2F;h1&gt;
+&lt;p&gt;DianQK is just a casual Chinese pseudonym formed from the pinyin abbreviation of &amp;quot;靛(dian)&amp;quot; and &amp;quot;青(qing)&amp;quot;, where &amp;quot;靛青&amp;quot; refers to indigo. It has led to confusion about how to call me. To resolve this, I asked ChatGPT for a name: Quentin Dian. So, you can call me Dian or dianqk.&lt;&#x2F;p&gt;
+&lt;p&gt;I switched entirely from Arch Linux to NixOS, a fantastic operating system where I can manage everything with code.&lt;&#x2F;p&gt;
+&lt;p&gt;To enhance my efficiency, I also purchased a GPD handheld console. I complete most of the code above using the GPD during my subway commutes. I assembled a machine with a 7950X processor, cutting my local build time in half. I can now complete a full compile in just a few minutes. I also bought a Mac Mini (M2) to test issues on that platform.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;2023-10-28-summary-gpd.jpg&quot; alt=&quot;GPG Win 4&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Finding LLVM bugs in rust using good-bad comparisons</title>
+        <published>2023-10-15T00:00:00+00:00</published>
+        <updated>2023-10-15T00:00:00+00:00</updated>
+        <author>
+          <name>Unknown</name>
+        </author>
+        <link rel="alternate" href="https://dianqk.blog/finding-llvm-bugs-in-rustc-with-comparisons/" type="text/html"/>
+        <id>https://dianqk.blog/finding-llvm-bugs-in-rustc-with-comparisons/</id>
+        
+        <content type="html">&lt;h1 id=&quot;abstract&quot;&gt;Abstract&lt;&#x2F;h1&gt;
+&lt;p&gt;Finding problems in large projects is always complicated, and the LLVM bugs mixed in with rust is one such case. In this article, I will describe how I solved the rust unit test failure issue under stage2.
+I&#x27;ll discuss the issues around &lt;a href=&quot;https:&#x2F;&#x2F;rust-lang.zulipchat.com&#x2F;#narrow&#x2F;stream&#x2F;131828-t-compiler&#x2F;topic&#x2F;Failing.20tests.20when.20rustc.20is.20compiled.20with.201.20CGU&quot;&gt;Failing tests when rustc is compiled with 1 CGU&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;rust-lang.zulipchat.com&#x2F;#narrow&#x2F;stream&#x2F;131828-t-compiler&#x2F;topic&#x2F;Implementing.20niche.20checks&quot;&gt;Implementing niche checks&lt;&#x2F;a&gt; to document my process for solving this type of issue, which I hope will help solve this type of issue in the future.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;before-we-start&quot;&gt;Before We Start&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;Since this is a summary post of my solution, I may have omitted some details of the process, so please forgive me.&lt;&#x2F;li&gt;
+&lt;li&gt;Feel free to submit &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;dianqk.blog&#x2F;issues&quot;&gt;an issue&lt;&#x2F;a&gt; or &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;dianqk.blog&#x2F;pulls&quot;&gt;PR&lt;&#x2F;a&gt; to correct errors in the article.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I have prepared a corresponding project for this article, see:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;repro-1-cgu&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;tree&#x2F;blog&#x2F;mir-niche-checks&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The PR to fix these two issues is:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;67539&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;pull&#x2F;68190&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h1 id=&quot;how-to-reproduce-the-first-problem&quot;&gt;How to reproduce the first problem&lt;&#x2F;h1&gt;
+&lt;p&gt;First, we need to switch to a revision that can be reproduced:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; clone https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust.git
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;git&lt;&#x2F;span&gt;&lt;span&gt; checkout 085acd02d4abaf2ccaf629134caa83cfe23283c8
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then we need to change &lt;code&gt;config.toml&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profile &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;dist&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profiler &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We also need to understand how to use &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rustc-perf&quot;&gt;rustc-perf&lt;&#x2F;a&gt; and then build rustc with PGO optimization using the following script:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-generate&lt;&#x2F;span&gt;&lt;span&gt;=&#x2F;tmp&#x2F;profiles&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo&lt;&#x2F;span&gt;&lt;span&gt; run&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --bin&lt;&#x2F;span&gt;&lt;span&gt; collector bench_local&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --include&lt;&#x2F;span&gt;&lt;span&gt; serde,syn &amp;lt;path to stage2&#x2F;bin&#x2F;rustc&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;ci-llvm&#x2F;bin&#x2F;llvm-profdata&lt;&#x2F;span&gt;&lt;span&gt; merge&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -o&lt;&#x2F;span&gt;&lt;span&gt; profiles.profdata &#x2F;tmp&#x2F;profiles
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-use&lt;&#x2F;span&gt;&lt;span&gt;=profiles.profdata&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The problem can be reproduced by compiling the following code with this version of rustc: &lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;feature&lt;&#x2F;span&gt;&lt;span&gt;(inline_const)]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;        assert!(-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9.223372036854776e18&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f64 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i64 &lt;&#x2F;span&gt;&lt;span&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x8000000000000000&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u64 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i64&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;    }
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The reproduced error log is as follows:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error[E0080]:&lt;&#x2F;span&gt;&lt;span&gt; evaluation of `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;main::{constant#0&lt;&#x2F;span&gt;&lt;span&gt;}` failed
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;5 &lt;&#x2F;span&gt;&lt;span&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert!&lt;&#x2F;span&gt;&lt;span&gt;(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;  |         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&lt;&#x2F;span&gt;&lt;span&gt; the evaluated program panicked at &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span&gt;  = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; this error originates in the macro `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert&lt;&#x2F;span&gt;&lt;span&gt;` (in Nightly builds, run with&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; macro-backtrace for more info)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; erroneous constant encountered
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:4:5
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;4 &lt;&#x2F;span&gt;&lt;span&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;&#x2F;&lt;&#x2F;span&gt;&lt;span&gt;     const {
+&lt;&#x2F;span&gt;&lt;span&gt;5 | |         assert!(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;6 | |     }
+&lt;&#x2F;span&gt;&lt;span&gt;  | |&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;_____^
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error:&lt;&#x2F;span&gt;&lt;span&gt; aborting due to previous error
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;For&lt;&#x2F;span&gt;&lt;span&gt; more information about this error, try `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustc --explain&lt;&#x2F;span&gt;&lt;span&gt; E0080`.
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;do-some-preliminary-analysis&quot;&gt;Do some preliminary analysis&lt;&#x2F;h2&gt;
+&lt;h2 id=&quot;use-the-error-stack-to-determine-a-problematic-crate&quot;&gt;Use the error stack to determine a problematic crate&lt;&#x2F;h2&gt;
+&lt;p&gt;We can use &lt;code&gt;-Z treat-err-as-bug&lt;&#x2F;code&gt; to get the error stack, where the incorrectly compiled function is likely to be.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;›&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc .&#x2F;test.rs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; treat-err-as-bug
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;error[E0080]:&lt;&#x2F;span&gt;&lt;span&gt; evaluation of `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;main::{constant#0&lt;&#x2F;span&gt;&lt;span&gt;}` failed
+&lt;&#x2F;span&gt;&lt;span&gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;5 &lt;&#x2F;span&gt;&lt;span&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert!&lt;&#x2F;span&gt;&lt;span&gt;(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+&lt;&#x2F;span&gt;&lt;span&gt;  |         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&lt;&#x2F;span&gt;&lt;span&gt; the evaluated program panicked at &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;, .&#x2F;test.rs:5:9
+&lt;&#x2F;span&gt;&lt;span&gt;  |
+&lt;&#x2F;span&gt;&lt;span&gt;  = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;note:&lt;&#x2F;span&gt;&lt;span&gt; this error originates in the macro `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assert&lt;&#x2F;span&gt;&lt;span&gt;` (in Nightly builds, run with&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -Z&lt;&#x2F;span&gt;&lt;span&gt; macro-backtrace for more info)
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;thread &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; panicked at compiler&#x2F;rustc_errors&#x2F;src&#x2F;lib.rs:1724:30:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;aborting&lt;&#x2F;span&gt;&lt;span&gt; due to `&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;-Z&lt;&#x2F;span&gt;&lt;span&gt; treat-err-as-bug=1`
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stack&lt;&#x2F;span&gt;&lt;span&gt; backtrace:
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;23:&lt;&#x2F;span&gt;&lt;span&gt;     0x7f32189f3bd7 - rustc_const_eval&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span&gt;7551efff2730a760&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span&gt;::const_eval::eval_queries::eval_to_const_value_raw_provider
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;By examining the stack, I think &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt; is the crate to focus on, and we can do a simple verification to prove my guess. Change &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt; to the following:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;16
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We can see that the problem is no longer reproducing. I think rustc on stage1 compiles &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt; erroneously.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;simplify-test-rs&quot;&gt;Simplify &lt;code&gt;test.rs&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;After some tweaking of the reproduction use case, I found that the following code can also be reproduced:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span&gt;#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;crate_type &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;lib&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span&gt;_: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span&gt;= -&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1.1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span&gt;- &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Also, we can see that the issue here behaves as if any negative floating-point number converted to a signed integer will go straight to 0.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;roughly-identify-the-problem-function&quot;&gt;Roughly identify the problem function&lt;&#x2F;h2&gt;
+&lt;p&gt;By reading the &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt; code and analyzing the call stack, I guess the issue is in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;blob&#x2F;085acd02d4abaf2ccaf629134caa83cfe23283c8&#x2F;compiler&#x2F;rustc_const_eval&#x2F;src&#x2F;interpret&#x2F;cast.rs#L183&quot;&gt;float_to_float_or_int&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;blob&#x2F;085acd02d4abaf2ccaf629134caa83cfe23283c8&#x2F;compiler&#x2F;rustc_const_eval&#x2F;src&#x2F;interpret&#x2F;cast.rs#L309&quot;&gt;cast_from_float&lt;&#x2F;a&gt; nearby.&lt;&#x2F;p&gt;
+&lt;p&gt;To verify this, we can use &lt;code&gt;#[inline(never)]&lt;&#x2F;code&gt; to prevent partial optimization. I found that adding &lt;code&gt;#[inline(never)]&lt;&#x2F;code&gt; to &lt;code&gt;float_to_float_or_int&lt;&#x2F;code&gt; is still an issue while adding to &lt;code&gt;cast_from_float&lt;&#x2F;code&gt; makes the test code compile correctly. I guess the issue is in &lt;code&gt;float_to_float_or_int&lt;&#x2F;code&gt; and the inline function &lt;code&gt;cast_from_float&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;is-it-really-about-pgo&quot;&gt;Is it really about PGO?&lt;&#x2F;h2&gt;
+&lt;p&gt;In fact, we can reproduce the issue directly using the stage2 version of rustc used to generate PGO:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --rust-profile-generate&lt;&#x2F;span&gt;&lt;span&gt;=&#x2F;tmp&#x2F;profiles&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h1 id=&quot;use-git-bisect-to-find-which-commit-caused-the-problem&quot;&gt;Use git bisect to find which commit caused the problem&lt;&#x2F;h1&gt;
+&lt;p&gt;While this result may not be a faulty commit, it can give us a concrete way to control the compilation of errors. We can further pinpoint the problem by tuning this commit.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;pick-a-good-commit&quot;&gt;Pick a good commit&lt;&#x2F;h2&gt;
+&lt;p&gt;In execute git bisect, we need to find a good commit.
+If we can&#x27;t find a good commit between major releases, I&#x27;m going to give up on git bisect because a commit that&#x27;s too far back in time might not make sense. And the more commits we ignore, the more likely we are to have other unrelated issues.
+Here&#x27;s a simple approach: LLVM&#x27;s tags have a creation rule where we create a tag that raises the major version at the same time we create a new release branch, which is &lt;code&gt;llvmorg-{version}-init&lt;&#x2F;code&gt;, which has a linear relationship and is very bisect-friendly.
+I would treat &lt;code&gt;llvmorg-18-init&lt;&#x2F;code&gt; and &lt;code&gt;llvmorg-17.0.1&lt;&#x2F;code&gt; as consistent code.&lt;&#x2F;p&gt;
+&lt;p&gt;Here we have chosen the comparison version:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Good commit: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;b0daacf58f417634f7c7c9496589d723592a8f5a&quot;&gt;b0daacf5&lt;&#x2F;a&gt;, which is the previous commit of &lt;code&gt;llvmorg-17-init&lt;&#x2F;code&gt;, and is similar to &lt;code&gt;llvmorg-16.0.0&lt;&#x2F;code&gt;. Since rust uses version numbers to adapt to LLVM API changes, we need to keep the version numbers consistent with the API.&lt;&#x2F;li&gt;
+&lt;li&gt;Bad commit: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;d0b54bb50e5110a004b41fc06dadf3fee70834b7&quot;&gt;d0b54bb5&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;preparing-the-llvm-build-configuration&quot;&gt;Preparing the LLVM build configuration&lt;&#x2F;h2&gt;
+&lt;p&gt;Since each step of the bisect takes a long time, I first recommend using a higher-performance computer to shorten this time.&lt;&#x2F;p&gt;
+&lt;p&gt;Then change &lt;code&gt;config.toml&lt;&#x2F;code&gt; to reduce the repetitive build time, my changes are as follows:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;submodules &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[llvm]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;download-ci-llvm &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ccache &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;sccache&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;X86&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;experimental-targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[target.x86_64-unknown-linux-gnu]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# The commit of the patch will be removed after using bisect.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;llvm-has-rust-patches &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;256
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Also, change &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;reducing-functions-processed-by-pgo&quot;&gt;Reducing functions processed by PGO&lt;&#x2F;h2&gt;
+&lt;p&gt;This reduces build time and further identifies the problem.&lt;&#x2F;p&gt;
+&lt;p&gt;We change &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;blob&#x2F;llvmorg-17.0.2&#x2F;llvm&#x2F;lib&#x2F;Transforms&#x2F;Instrumentation&#x2F;PGOInstrumentation.cpp#L1761&quot;&gt;PGOInstrumentation.cpp#L1761&lt;&#x2F;a&gt; filtering rules, for example:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;skipPGO&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; Function &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;F&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!F.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cast_from_float&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;execute-git-bisect&quot;&gt;Execute git bisect&lt;&#x2F;h2&gt;
+&lt;p&gt;The bisect process is a bit different from the standard LLVM project. Instead of using &lt;code&gt;git bisect skip&lt;&#x2F;code&gt;, we need to manually adapt API changes when we encounter a &lt;code&gt;PassWrapper.cpp&lt;&#x2F;code&gt; compilation failure. Instead of using &lt;code&gt;git bisect skip&lt;&#x2F;code&gt;.
+Since &lt;code&gt;PassWrapper.cpp&lt;&#x2F;code&gt; has to be modified so often, we can&#x27;t automate the process using &lt;code&gt;git bisect run&lt;&#x2F;code&gt;, but have to do it manually and check the results each time. With any luck, it takes less than 12 runs to get the results.&lt;&#x2F;p&gt;
+&lt;p&gt;After running it for a while, I got a bisect result of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;commit&#x2F;361464c027239a70d66fb7790032b23696d5b303&quot;&gt;361464c0&lt;&#x2F;a&gt;.
+Because the LLVM is so complex, I also generally can&#x27;t tell what the problem is directly from this commit, and this commit may not necessarily be a faulty commit.&lt;&#x2F;p&gt;
+&lt;p&gt;I generally categorize bisect results into several categories:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;It was a standalone commit that caused the mis-compilation to occur.&lt;&#x2F;li&gt;
+&lt;li&gt;This is a standalone commit that caused a mis-compilation to occur. It was a commit with misleading information that caused a later Pass to produce a &amp;quot;mis&amp;quot; compilation (this is the first type of problem).&lt;&#x2F;li&gt;
+&lt;li&gt;it&#x27;s just a coincidence that a later mis-compiled Pass provided matching input or exposed an existing mis-compilation (this is the second type of problem).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;At this point, however, we can&#x27;t categorize the result of this one. But we can use this result to continue debugging the problem.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;finding-the-transformation-of-interest-by-changing-the-llvm-source-code&quot;&gt;Finding the transformation of interest by changing the LLVM source code&lt;&#x2F;h1&gt;
+&lt;p&gt;At this point, we don&#x27;t know where the mis-compilation is, and we can&#x27;t debug it by getting an IR directly. We still compile and run rustc to locate the problem until we have a clear conclusion.&lt;&#x2F;p&gt;
+&lt;p&gt;Based on the bisect result, &lt;strong&gt;we need to find which function ended up mis-compiling after &lt;code&gt;processImmutArgument&lt;&#x2F;code&gt;&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Using code like the following can help us step-by-step to pinpoint which function is affected.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span&gt;MemCpyOptPass::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;processImmutArgument&lt;&#x2F;span&gt;&lt;span&gt;(CallBase &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CB&lt;&#x2F;span&gt;&lt;span&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsigned &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ArgNo&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;auto&lt;&#x2F;span&gt;&lt;span&gt; FnName = CB.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getFunction&lt;&#x2F;span&gt;&lt;span&gt;()-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;        FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;CompileTimeInterpreter&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;        FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;)) {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Skip &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; FnName &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Looking through the log I can find that the function impacted in &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; is:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;&amp;lt;rustc_const_eval::interpret::eval_context::InterpCx&amp;lt;rustc_const_eval::const_eval::machine::CompileTimeInterpreter&amp;gt;&amp;gt;::float_to_float_or_int
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;From the log I found that this function completes multiple &lt;code&gt;memcpy&lt;&#x2F;code&gt; transformations.&lt;&#x2F;p&gt;
+&lt;p&gt;So we can continue filtering to find which transformation is causing the problem.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;auto&lt;&#x2F;span&gt;&lt;span&gt; FnName = CB.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getFunction&lt;&#x2F;span&gt;&lt;span&gt;()-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getName&lt;&#x2F;span&gt;&lt;span&gt;();
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool&lt;&#x2F;span&gt;&lt;span&gt; IsKeyFunction = FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rustc_const_eval&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;                     FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;CompileTimeInterpreter&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) &amp;amp;&amp;amp;
+&lt;&#x2F;span&gt;&lt;span&gt;                     FnName.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;contains&lt;&#x2F;span&gt;&lt;span&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;float_to_float_or_int&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;);
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(!IsKeyFunction)
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static int&lt;&#x2F;span&gt;&lt;span&gt; Count = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;Count += &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(Count != &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Skip &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; Count &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;errs&lt;&#x2F;span&gt;&lt;span&gt;() &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;LLVMLOG: Use &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &amp;lt;&amp;lt; Count &amp;lt;&amp;lt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;When I got to this point, I began to suspect that the mis-compilation had nothing to do with PGO. At this point, I tried canceling the PGO which also reproduced the problem.
+My guess is that PGO was just a coincidence that exposed the mis-compilation to the runtime.
+But we don&#x27;t yet know what type of &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; it is, and it could be a new coincidence, or a mis-compilation, or a misdirected subsequent Pass. &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;using-opt-bisect-limit&quot;&gt;Using &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;We can use &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; to locate which pass changes instructions that cause problems at runtime.&lt;&#x2F;p&gt;
+&lt;p&gt;There are two types of passes found using &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The previous pass performed the correct transformation but did not update the metadata and other information in time, resulting in a problem with the found passes.&lt;&#x2F;li&gt;
+&lt;li&gt;There is a mis-compilation in the found pass itself.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;execute-opt-bisect-limit-for-a-specific-crate&quot;&gt;Execute &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; for a specific crate.&lt;&#x2F;h2&gt;
+&lt;p&gt;Trivia: This real debugging was done by changing &lt;code&gt;OptBisect.cpp&lt;&#x2F;code&gt;. However, while writing this article, I found a simpler and more efficient solution.&lt;&#x2F;p&gt;
+&lt;p&gt;If we set &lt;code&gt;-Cllvm-args=-opt-bisect-limit=-1&lt;&#x2F;code&gt; via &lt;code&gt;RUSTFLAGS_NOT_BOOTSTRAP&lt;&#x2F;code&gt; directly, we will get a lot of invalid logs. We want to apply this only to &lt;code&gt;rustc_const_eval&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;The nightly version of &lt;code&gt;cargo&lt;&#x2F;code&gt; provides this. We need to switch to nightly first. make the following changes:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[build]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&amp;lt;path to home&amp;gt;&#x2F;.rustup&#x2F;toolchains&#x2F;nightly-x86_64-unknown-linux-gnu&#x2F;bin&#x2F;cargo&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then update &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cargo-features &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;profile-rustflags&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ...
+&lt;&#x2F;span&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustflags &lt;&#x2F;span&gt;&lt;span&gt;= [
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;llvm-args=-opt-bisect-limit=-1&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;,
+&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Next, we can build using &lt;code&gt;--keep-stage&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage&lt;&#x2F;span&gt;&lt;span&gt; 0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage-std&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; build.log
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;test.rs
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;My final bisect result was:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (560953) MemCpyOptPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: running pass (560954) DSEPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (560955) MoveAutoInitPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It&#x27;s weird to me. If I set the limit to &lt;code&gt;560953&lt;&#x2F;code&gt;, the result does not stop at &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt;. The result is a bit untrustworthy.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (560953) BDCEPass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;However, we can verify that the problem is related to &lt;code&gt;DSEPass&lt;&#x2F;code&gt; in a similar way, by changing the code to skip &lt;code&gt;DSEPass&lt;&#x2F;code&gt;.
+Next, as with debugging &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt;, we can find out exactly which instruction &lt;code&gt;DSEPass&lt;&#x2F;code&gt; transformation is causing the final mis-compilation.&lt;&#x2F;p&gt;
+&lt;p&gt;Update: For more stable results with &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt;, we can try &lt;code&gt;-Z no-parallel-llvm&lt;&#x2F;code&gt;. Also, &lt;code&gt;rustc&lt;&#x2F;code&gt; tries to perform ThinLTO by default, which can be turned off with &lt;code&gt;-C lto=false&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;getting-ir-to-prepare-for-llvm-debugging&quot;&gt;Getting IR to prepare for LLVM debugging&lt;&#x2F;h1&gt;
+&lt;p&gt;This part is related to LLVM debugging, and I don&#x27;t have any good experience to share yet.&lt;&#x2F;p&gt;
+&lt;p&gt;But the two important points are:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We know exactly which transformation affects the result in &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;We also know which transformation in &lt;code&gt;DSEPass&lt;&#x2F;code&gt; caused the final mis-compilation.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;With these two transformations, we can use &lt;code&gt;opt&lt;&#x2F;code&gt; to debug IR. We don&#x27;t need to use &lt;code&gt;rustc&lt;&#x2F;code&gt; to compile as often!&lt;&#x2F;p&gt;
+&lt;p&gt;The recommended way to get the IR is by changing &lt;code&gt;Cargo.toml&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span&gt;[profile.release.package.rustc_const_eval]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-units &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rustflags &lt;&#x2F;span&gt;&lt;span&gt;= [
+&lt;&#x2F;span&gt;&lt;span&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;, &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;save-temps&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;,
+&lt;&#x2F;span&gt;&lt;span&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then find &lt;code&gt;*.no-opt.bc&lt;&#x2F;code&gt; to debug.&lt;&#x2F;p&gt;
+&lt;p&gt;Of course, during this debugging process, we need to know the details of the logic of the two transformations of &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; and &lt;code&gt;DSEPass&lt;&#x2F;code&gt;. Here we&#x27;ll learn that this is a transformation via alias analysis, which ultimately pinpoints the fact that &lt;code&gt;MemCpyOptPass&lt;&#x2F;code&gt; doesn&#x27;t update the corresponding alias information when replacing the value used by the instruction.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;next-question-mir-niche-checks&quot;&gt;Next question - mir niche checks&lt;&#x2F;h1&gt;
+&lt;p&gt;Although this problem is easier to reproduce than the previous one, it will be more troublesome to solve.
+First, let&#x27;s switch to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;cf8d85e49c6f3a5802549055f983fd0ba3f89952&quot;&gt;cf8d85e4&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;This can be reproduced by running a test with &lt;code&gt;--stage 2&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; test tests&#x2F;ui&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;config.toml&lt;&#x2F;code&gt; reference:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;toml&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-toml &quot;&gt;&lt;code class=&quot;language-toml&quot; data-lang=&quot;toml&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;profile &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;codegen&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[llvm]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;enable-warnings &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;download-ci-llvm &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;ccache &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;sccache&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;X86&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;experimental-targets &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;link-shared &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;use-linker &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;lld&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;release-debuginfo &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;[rust]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;incremental &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;optimize &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-logging &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;deny-warnings &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;codegen-backends &lt;&#x2F;span&gt;&lt;span&gt;= [&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;llvm&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;use-lld &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;lto &lt;&#x2F;span&gt;&lt;span&gt;= &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;off&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-assertions &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;debug-assertions-std &lt;&#x2F;span&gt;&lt;span&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The error log is as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;thread &amp;#39;rustc&amp;#39; panicked at compiler&#x2F;rustc_mir_build&#x2F;src&#x2F;thir&#x2F;pattern&#x2F;deconstruct_pat.rs:560:22:
+&lt;&#x2F;span&gt;&lt;span&gt;occupied niche: found 0x7f7700000000 but must be in 0x0..=0x2 in type std::option::Option&amp;lt;thir::pattern::deconstruct_pat::SliceKind&amp;gt; at offset 0 with type Int(I64, false)
+&lt;&#x2F;span&gt;&lt;span&gt;stack backtrace:
+&lt;&#x2F;span&gt;&lt;span&gt;  ...
+&lt;&#x2F;span&gt;&lt;span&gt;  13:     0x7f77e92ade54 - &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::Constructor&amp;gt;::split::&amp;lt;core[8d828210e7f791ba]::iter::adapters::map::Map&amp;lt;core[8d828210e7f791ba]::iter::adapters::map::Map&amp;lt;core[8d828210e7f791ba]::slice::iter::Iter&amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::PatStack&amp;gt;, &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::Matrix&amp;gt;::heads::{closure#0}&amp;gt;, &amp;lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::DeconstructedPat&amp;gt;::ctor&amp;gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span&gt;  ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I found that if I set &lt;code&gt;codegen-units=1&lt;&#x2F;code&gt;, the panic disappears. So we can use &lt;code&gt;codegen-units&lt;&#x2F;code&gt; to determine which crate is impacted. I guessed &lt;code&gt;rustc_mir_build&lt;&#x2F;code&gt; based on the stack and tried toggling &lt;code&gt;codegen-units=1&lt;&#x2F;code&gt; to verify. Since this issue occurred at roughly the same point in time as the previous one, we used the same LLVM commit at the start of the bisect. Unfortunately, with the &lt;code&gt;optimize=3&lt;&#x2F;code&gt; set, we can&#x27;t find a good commit in LLVM 16. But I also tried setting &lt;code&gt;optimize=2&lt;&#x2F;code&gt; and can find LLVM 16 is a good commit.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tricky-git-bisect&quot;&gt;Tricky git bisect&lt;&#x2F;h2&gt;
+&lt;p&gt;During the bisect process, I get an unexpected result:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;---- [ui] tests&#x2F;ui&#x2F;issue-11881.rs stdout ----
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;error: test compilation failed although it shouldn&amp;#39;t!
+&lt;&#x2F;span&gt;&lt;span&gt;status: exit status: 1
+&lt;&#x2F;span&gt;&lt;span&gt;command: RUSTC_ICE=&amp;quot;0&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage2&#x2F;bin&#x2F;rustc&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs&amp;quot; &amp;quot;-Zthreads=1&amp;quot; &amp;quot;-Zsimulate-remapped-rust-src-base=&#x2F;rustc&#x2F;FAKE_PREFIX&amp;quot; &amp;quot;-Ztranslate-remapped-path-to-local-path=no&amp;quot; &amp;quot;-Z&amp;quot; &amp;quot;ignore-directory-in-diagnostics-source-blocks=&#x2F;home&#x2F;dianqk&#x2F;.cargo&amp;quot; &amp;quot;--sysroot&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage2&amp;quot; &amp;quot;--target=x86_64-unknown-linux-gnu&amp;quot; &amp;quot;-O&amp;quot; &amp;quot;--error-format&amp;quot; &amp;quot;json&amp;quot; &amp;quot;--json&amp;quot; &amp;quot;future-incompat&amp;quot; &amp;quot;-Ccodegen-units=1&amp;quot; &amp;quot;-Zui-testing&amp;quot; &amp;quot;-Zdeduplicate-diagnostics=no&amp;quot; &amp;quot;-Zwrite-long-types-to-disk=no&amp;quot; &amp;quot;-Cstrip=debuginfo&amp;quot; &amp;quot;-C&amp;quot; &amp;quot;prefer-dynamic&amp;quot; &amp;quot;-o&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;test&#x2F;ui&#x2F;issue-11881&#x2F;a&amp;quot; &amp;quot;-A&amp;quot; &amp;quot;internal_features&amp;quot; &amp;quot;-Crpath&amp;quot; &amp;quot;-Cdebuginfo=0&amp;quot; &amp;quot;-Lnative=&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;native&#x2F;rust-test-helpers&amp;quot; &amp;quot;-Clink-arg=-fuse-ld=lld&amp;quot; &amp;quot;-Clink-arg=-Wl,--threads=1&amp;quot; &amp;quot;-L&amp;quot; &amp;quot;&#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;build&#x2F;x86_64-unknown-linux-gnu&#x2F;test&#x2F;ui&#x2F;issue-11881&#x2F;auxiliary&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;stdout: none
+&lt;&#x2F;span&gt;&lt;span&gt;--- stderr -------------------------------
+&lt;&#x2F;span&gt;&lt;span&gt;error: unexpected token: `&amp;amp;`
+&lt;&#x2F;span&gt;&lt;span&gt;  --&amp;gt; &#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs:18:25
+&lt;&#x2F;span&gt;&lt;span&gt;   |
+&lt;&#x2F;span&gt;&lt;span&gt;LL |     fn encode(&amp;amp;self, s: &amp;amp;mut S) -&amp;gt; Result&amp;lt;(), S::Error&amp;gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;   |                         ^ unexpected token after this
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;error: unexpected token: `&amp;amp;`
+&lt;&#x2F;span&gt;&lt;span&gt;  --&amp;gt; &#x2F;home&#x2F;dianqk&#x2F;rust-workspace&#x2F;rust&#x2F;tests&#x2F;ui&#x2F;issue-11881.rs:33:23
+&lt;&#x2F;span&gt;&lt;span&gt;   |
+&lt;&#x2F;span&gt;&lt;span&gt;LL |     fn fmt(&amp;amp;self, _f: &amp;amp;mut fmt::Formatter&amp;lt;&amp;#39;_&amp;gt;) -&amp;gt; fmt::Result {
+&lt;&#x2F;span&gt;&lt;span&gt;   |                       ^ unexpected token after this
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;For this result, we can&#x27;t use good&#x2F;bad to execute bisect, which leads bisect to the wrong result.&lt;&#x2F;p&gt;
+&lt;p&gt;Unfortunately, even with a skip, we can&#x27;t get a bisect result.
+When bisect is in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;llvm&#x2F;llvm-project&#x2F;compare&#x2F;f7deb69f22b93d7411d08db14b50aae5caf40fcb...7c78cb4b1f4993a84bf2b46b197d90dcabb9f8c5&quot;&gt;f7deb69f2...7c78cb4b&lt;&#x2F;a&gt; internally, it is possible to get this unexpected error. If it&#x27;s an earlier commit, it&#x27;s good, and if it&#x27;s a later commit, it&#x27;s bad.
+This is because new issues were introduced with the change in the semantics of &lt;code&gt;nonnull&lt;&#x2F;code&gt; and so on, and we overlooked some issue fixes during bisect that led to the exposure of a new issue.&lt;&#x2F;p&gt;
+&lt;p&gt;The history of this commit is as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;bad
+&lt;&#x2F;span&gt;&lt;span&gt;Revert &amp;quot;[SimplifyCFG][LICM] Preserve nonnull, range and align metadat…  7c78cb4
+&lt;&#x2F;span&gt;&lt;span&gt;skip
+&lt;&#x2F;span&gt;&lt;span&gt;[SimplifyCFG][LICM] Preserve nonnull, range and align metadata when s…  78b1fbc
+&lt;&#x2F;span&gt;&lt;span&gt;good
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Since we ignored some commits that caused a new problem, bisect had no results.
+Luckily, this time the problem was exceptional and we were able to drop &lt;code&gt;78b1fbc&lt;&#x2F;code&gt; and &lt;code&gt;7c78cb4&lt;&#x2F;code&gt; using rebase.&lt;&#x2F;p&gt;
+&lt;p&gt;The final bisect result is &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;commit&#x2F;2f70f65246e987842cfae495839975eaa6245a0c&quot;&gt;[AggressiveInstCombine] Enable also for -O2&lt;&#x2F;a&gt;.
+I also found the critical transformation in &lt;code&gt;AggressiveInstCombine&lt;&#x2F;code&gt; by changing the code, but I can&#x27;t see anything wrong with it from the code or IR. It could be that I&#x27;m missing something, or it could be that this is just a lucky opportunity for a triggering.
+We need to keep this point of suspicion in mind and continue troubleshooting.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;codegen-units-256-opt-bisect-limit-n&quot;&gt;&lt;code&gt;codegen-units=256&lt;&#x2F;code&gt; &amp;amp; &lt;code&gt;-opt-bisect-limit=n&lt;&#x2F;code&gt;&lt;&#x2F;h1&gt;
+&lt;p&gt;This time we have no way to use &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; because &lt;code&gt;codegen-units&lt;&#x2F;code&gt; is not equal to 1. 
+It doesn&#x27;t make sense to bisect multiple IRs at the same time. We need to modify the rust code to support selecting a specific CGU to bisect under multiple CGUs.&lt;&#x2F;p&gt;
+&lt;p&gt;First use &lt;code&gt;-C save-temps&lt;&#x2F;code&gt; to find the corresponding IR. See &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;bfd759b704b77d0ff390cc172a62c3d9a0c36986&quot;&gt;bfd759b7&lt;&#x2F;a&gt; for the details.&lt;&#x2F;p&gt;
+&lt;p&gt;Trivia: Here I also tried to find the one transformation in AggressiveInstCombine that had an effect. It was a headache that adding &lt;code&gt;-C save-temps&lt;&#x2F;code&gt; changed the symbol names, which made me look again for the associated symbols.&lt;&#x2F;p&gt;
+&lt;p&gt;I wrote a simple script to find this IR:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for&lt;&#x2F;span&gt;&lt;span&gt; bitcode &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in&lt;&#x2F;span&gt;&lt;span&gt; build&#x2F;x86_64-unknown-linux-gnu&#x2F;stage1-rustc&#x2F;x86_64-unknown-linux-gnu&#x2F;release&#x2F;deps&#x2F;rustc_mir_build-*-cgu.*.rcgu.no-opt.bc; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;llvm-nm -U &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bitcode &lt;&#x2F;span&gt;&lt;span&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;grep -q &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;example&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;then
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bitcode
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fi
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;done
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I viewed the implementation of &lt;code&gt;OptBisect&lt;&#x2F;code&gt;, and although the &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; option is global, we can replace an empty &lt;code&gt;OptBisect&lt;&#x2F;code&gt; with a separate one for the CGU. The full modification is at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;rust&#x2F;commit&#x2F;a9f62a4a634aef8f792e9cb6eb4573b4b9fc79d2&quot;&gt;a9f62a4a&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Some key changes are referenced below:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;struct &lt;&#x2F;span&gt;&lt;span&gt;RunAllOptPassGate : &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;public &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;OptPassGate &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;shouldRunPass&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;PassName&lt;&#x2F;span&gt;&lt;span&gt;, StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;IRDescription&lt;&#x2F;span&gt;&lt;span&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;override &lt;&#x2F;span&gt;&lt;span&gt;{
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;isEnabled&lt;&#x2F;span&gt;&lt;span&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const override &lt;&#x2F;span&gt;&lt;span&gt;{ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;; }
+&lt;&#x2F;span&gt;&lt;span&gt;};
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;getRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;static&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate RunAllOptPassGate;
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span&gt; RunAllOptPassGate;
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;extern &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;C&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;void &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;LLVMRustContextSetSetRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;(LLVMContextRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;C&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span&gt;(C)-&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;setOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;getRunAllOptPassGate&lt;&#x2F;span&gt;&lt;span&gt;());
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I also added a command line argument &lt;code&gt;-Z llvm-opt-bisect-limit-cgu&lt;&#x2F;code&gt; so that I could bisect using the following script:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;export &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;RUSTFLAGS_NOT_BOOTSTRAP&lt;&#x2F;span&gt;&lt;span&gt;=&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;-C llvm-args=-opt-bisect-limit=-1 -Z llvm-opt-bisect-limit-cgu=rustc_mir_build.63d28fcded2a05ed-cgu.007&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;x&lt;&#x2F;span&gt;&lt;span&gt; build&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --stage&lt;&#x2F;span&gt;&lt;span&gt; 2 library&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage&lt;&#x2F;span&gt;&lt;span&gt; 0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --keep-stage-std&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; build.log
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;.&#x2F;build&#x2F;host&#x2F;stage2&#x2F;bin&#x2F;rustc&lt;&#x2F;span&gt;&lt;span&gt; .&#x2F;tests&#x2F;ui&#x2F;consts&#x2F;const_prop_slice_pat_ice.rs
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I also wrote a simple automated bisect script:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;bash&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-bash &quot;&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;function &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;iterate&lt;&#x2F;span&gt;&lt;span&gt;() {
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span&gt;=`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sed -n &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1p&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; bisect_result`
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;=`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sed -n &lt;&#x2F;span&gt;&lt;span&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;2p&lt;&#x2F;span&gt;&lt;span&gt;&amp;#39; bisect_result`
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;result&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;((bad &lt;&#x2F;span&gt;&lt;span&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; good))
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;good: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;, bad: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;[ &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;result -eq&lt;&#x2F;span&gt;&lt;span&gt; 1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;then
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;done&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;exit&lt;&#x2F;span&gt;&lt;span&gt; 0
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;local &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;((good &lt;&#x2F;span&gt;&lt;span&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;(result &lt;&#x2F;span&gt;&lt;span&gt;&#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;)))
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bash&lt;&#x2F;span&gt;&lt;span&gt; bisect.sh $&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;?
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;case &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in
+&lt;&#x2F;span&gt;&lt;span&gt;            0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;            1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad&lt;&#x2F;span&gt;&lt;span&gt;=$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;next
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;            *&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;failed: &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;exit_code&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;
+&lt;&#x2F;span&gt;&lt;span&gt;                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;exit&lt;&#x2F;span&gt;&lt;span&gt; 1
+&lt;&#x2F;span&gt;&lt;span&gt;                ;;
+&lt;&#x2F;span&gt;&lt;span&gt;        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;esac
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fi
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;good &lt;&#x2F;span&gt;&lt;span&gt;&amp;gt; bisect_result
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bad &lt;&#x2F;span&gt;&lt;span&gt;&amp;gt;&amp;gt; bisect_result
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;iterate
+&lt;&#x2F;span&gt;&lt;span&gt;    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sleep&lt;&#x2F;span&gt;&lt;span&gt; 1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;done
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;But I got a weird result:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;ISECT: running pass (13444) InlinerPass on (symbol)
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (13445) PostOrderFunctionAttrsPass on (symbol)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I don&#x27;t think inline is directly related to this mis-compilation.
+I simply changed &lt;code&gt;OptBisect.cpp&lt;&#x2F;code&gt; to skip &lt;code&gt;InlinerPass&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;cpp&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-cpp &quot;&gt;&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span&gt;OptBisect::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;shouldRunPass&lt;&#x2F;span&gt;&lt;span&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const&lt;&#x2F;span&gt;&lt;span&gt; StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;PassName&lt;&#x2F;span&gt;&lt;span&gt;,
+&lt;&#x2F;span&gt;&lt;span&gt;                              StringRef &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;IRDescription&lt;&#x2F;span&gt;&lt;span&gt;) {
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span&gt;(PassName == &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;InlinerPass&lt;&#x2F;span&gt;&lt;span&gt;&amp;quot;) {
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;printPassMessage&lt;&#x2F;span&gt;&lt;span&gt;(PassName, -&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span&gt;, IRDescription, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;);
+&lt;&#x2F;span&gt;&lt;span&gt;      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span&gt;;
+&lt;&#x2F;span&gt;&lt;span&gt;  }
+&lt;&#x2F;span&gt;&lt;span&gt;  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; ...
+&lt;&#x2F;span&gt;&lt;span&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Eventually, I got:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;BISECT: running pass (10040) CorrelatedValuePropagationPass on symbol
+&lt;&#x2F;span&gt;&lt;span&gt;BISECT: NOT running pass (10041) SimplifyCFGPass on symbol
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To verify that &lt;code&gt;CorrelatedValuePropagationPass&lt;&#x2F;code&gt; is related, it is still done by removing unrelated code, see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;DianQK&#x2F;llvm-project&#x2F;commit&#x2F;a08f2c14b1d501aa9b76b96e26c7366c5a6e6e9b&quot;&gt;a08f2c14&lt;&#x2F;a&gt;.
+I also added a line of logging for simple validation:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;LLVMLOG: Delete   %102 = and i64 %101, 4294967295   -&amp;gt; and i64 %101, 0xffffffff
+&lt;&#x2F;span&gt;&lt;span&gt;...
+&lt;&#x2F;span&gt;&lt;span&gt;occupied niche: found 0x7fba00000001 but must be in 0x0..=0x2 in type std::option::Option&amp;lt;thir::pattern::deconstruct_pat::SliceKind&amp;gt; at offset 0 with type Int(I64, false)
+&lt;&#x2F;span&gt;&lt;span&gt;0x7fba00000001 &amp;amp; 0xffffffff = 0x1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I&#x27;m pretty sure this is what we&#x27;re looking for! This correlates very well with rustc&#x27;s panic log.
+Eventually, I realized that &lt;code&gt;%101&lt;&#x2F;code&gt; could get &lt;code&gt;undef&lt;&#x2F;code&gt; results under certain control flows. In this case, we should not remove &lt;code&gt;%102&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Here I am curious why it is related to &lt;code&gt;AggressiveInstCombine&lt;&#x2F;code&gt;, if we remove this Pass, the instruction to delete becomes &lt;code&gt;%123 = and i64 %122, 72057594037927935(0xffffffffffffff)&lt;&#x2F;code&gt;. We still can&#x27;t delete the instruction, it&#x27;s just that this huge value makes it hard for the program to encounter during runtime.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;summary&quot;&gt;Summary&lt;&#x2F;h1&gt;
+&lt;p&gt;What have we compared?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Finding the affected crate by comparing different &lt;code&gt;codegen-units&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Compare results by adding &lt;code&gt;[inline(never)]&lt;&#x2F;code&gt; to find the affected functions.&lt;&#x2F;li&gt;
+&lt;li&gt;git bisect to find out which commit affected the result.&lt;&#x2F;li&gt;
+&lt;li&gt;by changing the code to find out which transformations were affected.&lt;&#x2F;li&gt;
+&lt;li&gt;Finding related passes through &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; results.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I&#x27;m getting closer to the truth with these approaches. By the way, luck is also important, I don&#x27;t keep records of my missteps :].&lt;&#x2F;p&gt;
+&lt;p&gt;In these methods, I have also introduced some specific methods:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;git bisect can find results by removing some commits when it doesn&#x27;t (this may be a case-specific trick)&lt;&#x2F;li&gt;
+&lt;li&gt;cargo provides the ability to apply rustc parameters to a given crate&lt;&#x2F;li&gt;
+&lt;li&gt;Changing the rustc code to apply &lt;code&gt;opt-bisect-limit&lt;&#x2F;code&gt; to a specific CGU should make this useful for large projects.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The generalized process for solving this type of problem is:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;first find a way to shorten the time to single replication, too long debugging time is annoying&lt;&#x2F;li&gt;
+&lt;li&gt;the key objective is to &lt;strong&gt;find the key transformations that are causing the mis-compilation by comparing the above methods&lt;&#x2F;strong&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;extract the IR and locate the problem based on the crucial transformations&lt;&#x2F;li&gt;
+&lt;li&gt;fix the problem&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;I don&#x27;t have any experience with step 3 yet, but I would use &lt;code&gt;llvm-extract&lt;&#x2F;code&gt; and &lt;code&gt;llvm-reduce&lt;&#x2F;code&gt; to reduce the amount of IRs I get, which would be helpful for debugging. 
+I would also use &lt;code&gt;-opt-bisect-limit&lt;&#x2F;code&gt; to extract the IR for intermediate processes and manually remove some functions or instructions to debug the problem.&lt;&#x2F;p&gt;
+&lt;p&gt;I don&#x27;t have a clear idea of how to submit a proper fix yet, and currently, I rarely manage to get PRs for LGTM without modifications. l need to learn and practice more ;).&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;refer&quot;&gt;Refer&lt;&#x2F;h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;compiler-debugging.html&quot;&gt;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;compiler-debugging.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;backend&#x2F;debugging.html&quot;&gt;https:&#x2F;&#x2F;rustc-dev-guide.rust-lang.org&#x2F;backend&#x2F;debugging.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;llvm.org&#x2F;docs&#x2F;GitBisecting.html&quot;&gt;https:&#x2F;&#x2F;llvm.org&#x2F;docs&#x2F;GitBisecting.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;cargo&#x2F;reference&#x2F;unstable.html#profile-rustflags-option&quot;&gt;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;cargo&#x2F;reference&#x2F;unstable.html#profile-rustflags-option&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.llvm.org&#x2F;docs&#x2F;AliasAnalysis.html&quot;&gt;https:&#x2F;&#x2F;www.llvm.org&#x2F;docs&#x2F;AliasAnalysis.html&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;rustc&#x2F;codegen-options&#x2F;index.html#lto&quot;&gt;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;rustc&#x2F;codegen-options&#x2F;index.html#lto&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+</feed>

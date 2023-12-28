@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Finding LLVM bugs in rust using good-bad comparisons &middot; dianqk&#x27;s blog</title>
+    <meta name="description" content="
+
+  Finding problems in large projects is always complicated, and bugs in LLVM mixed with rust are one such case. This article describes how the author finds the rust unit test failure problem under stage2.
+
+" />
+    <link rel="shortcut icon"  href="https://dianqk.blog/favicon.ico" />
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://dianqk.blog/atom.xml"><link rel="me" href="https:&#x2F;&#x2F;mastodon.online&#x2F;@dianqk" /><style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="dianqk&#x27;s blog">
+      
+      <meta property="og:title" content="Finding LLVM bugs in rust using good-bad comparisons">
+      <meta property="og:description" content="Finding problems in large projects is always complicated, and bugs in LLVM mixed with rust are one such case. This article describes how the author finds the rust unit test failure problem under stage2.">
+      <meta property="og:url" content="https://dianqk.blog/finding-llvm-bugs-in-rustc-with-comparisons/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-10-15T00:00:00+00:00" />
+
+      
+      
+    
+
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://dianqk.blog" title="Home">dianqk&#x27;s blog</a>
+          <br /><small></small>
+        </h3>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>Finding LLVM bugs in rust using good-bad comparisons</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-10-15T00:00:00+00:00">October 15, 2023</time></p>
+  
+
+  <h1 id="abstract">Abstract</h1>
+<p>Finding problems in large projects is always complicated, and the LLVM bugs mixed in with rust is one such case. In this article, I will describe how I solved the rust unit test failure issue under stage2.
+I'll discuss the issues around <a href="https://rust-lang.zulipchat.com/#narrow/stream/131828-t-compiler/topic/Failing.20tests.20when.20rustc.20is.20compiled.20with.201.20CGU">Failing tests when rustc is compiled with 1 CGU</a> and <a href="https://rust-lang.zulipchat.com/#narrow/stream/131828-t-compiler/topic/Implementing.20niche.20checks">Implementing niche checks</a> to document my process for solving this type of issue, which I hope will help solve this type of issue in the future.</p>
+<h1 id="before-we-start">Before We Start</h1>
+<ul>
+<li>Since this is a summary post of my solution, I may have omitted some details of the process, so please forgive me.</li>
+<li>Feel free to submit <a href="https://github.com/DianQK/dianqk.blog/issues">an issue</a> or <a href="https://github.com/DianQK/dianqk.blog/pulls">PR</a> to correct errors in the article.</li>
+</ul>
+<p>I have prepared a corresponding project for this article, see:</p>
+<ul>
+<li><a href="https://github.com/DianQK/rust/tree/blog/repro-1-cgu">https://github.com/DianQK/rust/tree/blog/repro-1-cgu</a></li>
+<li><a href="https://github.com/DianQK/llvm-project/tree/blog/repro-1-cgu">https://github.com/DianQK/llvm-project/tree/blog/repro-1-cgu</a></li>
+<li><a href="https://github.com/DianQK/rust/tree/blog/mir-niche-checks">https://github.com/DianQK/rust/tree/blog/mir-niche-checks</a></li>
+<li><a href="https://github.com/DianQK/llvm-project/tree/blog/mir-niche-checks">https://github.com/DianQK/llvm-project/tree/blog/mir-niche-checks</a></li>
+</ul>
+<p>The PR to fix these two issues is:</p>
+<ul>
+<li><a href="https://github.com/llvm/llvm-project/pull/67539">https://github.com/llvm/llvm-project/pull/67539</a></li>
+<li><a href="https://github.com/llvm/llvm-project/pull/68190">https://github.com/llvm/llvm-project/pull/68190</a></li>
+</ul>
+<h1 id="how-to-reproduce-the-first-problem">How to reproduce the first problem</h1>
+<p>First, we need to switch to a revision that can be reproduced:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">git</span><span> clone https://github.com/rust-lang/rust.git
+</span><span style="color:#bf616a;">git</span><span> checkout 085acd02d4abaf2ccaf629134caa83cfe23283c8
+</span></code></pre>
+<p>Then we need to change <code>config.toml</code>:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">profile </span><span>= &quot;</span><span style="color:#a3be8c;">dist</span><span>&quot;
+</span><span>
+</span><span>[build]
+</span><span style="color:#bf616a;">profiler </span><span>= </span><span style="color:#d08770;">true
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">2
+</span></code></pre>
+<p>We also need to understand how to use <a href="https://github.com/rust-lang/rustc-perf">rustc-perf</a> and then build rustc with PGO optimization using the following script:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-generate</span><span>=/tmp/profiles</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span><span style="color:#bf616a;">cargo</span><span> run</span><span style="color:#bf616a;"> --bin</span><span> collector bench_local</span><span style="color:#bf616a;"> --include</span><span> serde,syn &lt;path to stage2/bin/rustc&gt;
+</span><span style="color:#bf616a;">./build/ci-llvm/bin/llvm-profdata</span><span> merge</span><span style="color:#bf616a;"> -o</span><span> profiles.profdata /tmp/profiles
+</span><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-use</span><span>=profiles.profdata</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span></code></pre>
+<p>The problem can be reproduced by compiling the following code with this version of rustc: </p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#![</span><span style="color:#bf616a;">feature</span><span>(inline_const)]
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">const </span><span>{
+</span><span>        assert!(-</span><span style="color:#d08770;">9.223372036854776e18</span><span style="color:#b48ead;">f64 </span><span>as </span><span style="color:#b48ead;">i64 </span><span>== </span><span style="color:#d08770;">0x8000000000000000</span><span style="color:#b48ead;">u64 </span><span>as </span><span style="color:#b48ead;">i64</span><span>);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The reproduced error log is as follows:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">error[E0080]:</span><span> evaluation of `</span><span style="color:#bf616a;">main::{constant#0</span><span>}` failed
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:5:9
+</span><span>  |
+</span><span style="color:#bf616a;">5 </span><span>|         </span><span style="color:#bf616a;">assert!</span><span>(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>  |         </span><span style="color:#bf616a;">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span><span> the evaluated program panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64</span><span>&#39;, ./test.rs:5:9
+</span><span>  |
+</span><span>  = </span><span style="color:#bf616a;">note:</span><span> this error originates in the macro `</span><span style="color:#bf616a;">assert</span><span>` (in Nightly builds, run with</span><span style="color:#bf616a;"> -Z</span><span> macro-backtrace for more info)
+</span><span>
+</span><span style="color:#bf616a;">note:</span><span> erroneous constant encountered
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:4:5
+</span><span>  |
+</span><span style="color:#bf616a;">4 </span><span>| </span><span style="color:#bf616a;">/</span><span>     const {
+</span><span>5 | |         assert!(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>6 | |     }
+</span><span>  | |</span><span style="color:#bf616a;">_____^
+</span><span>
+</span><span style="color:#bf616a;">error:</span><span> aborting due to previous error
+</span><span>
+</span><span style="color:#bf616a;">For</span><span> more information about this error, try `</span><span style="color:#bf616a;">rustc --explain</span><span> E0080`.
+</span></code></pre>
+<h2 id="do-some-preliminary-analysis">Do some preliminary analysis</h2>
+<h2 id="use-the-error-stack-to-determine-a-problematic-crate">Use the error stack to determine a problematic crate</h2>
+<p>We can use <code>-Z treat-err-as-bug</code> to get the error stack, where the incorrectly compiled function is likely to be.</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">›</span><span> ./build/host/stage2/bin/rustc ./test.rs</span><span style="color:#bf616a;"> -Z</span><span> treat-err-as-bug
+</span><span style="color:#bf616a;">error[E0080]:</span><span> evaluation of `</span><span style="color:#bf616a;">main::{constant#0</span><span>}` failed
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:5:9
+</span><span>  |
+</span><span style="color:#bf616a;">5 </span><span>|         </span><span style="color:#bf616a;">assert!</span><span>(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>  |         </span><span style="color:#bf616a;">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span><span> the evaluated program panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64</span><span>&#39;, ./test.rs:5:9
+</span><span>  |
+</span><span>  = </span><span style="color:#bf616a;">note:</span><span> this error originates in the macro `</span><span style="color:#bf616a;">assert</span><span>` (in Nightly builds, run with</span><span style="color:#bf616a;"> -Z</span><span> macro-backtrace for more info)
+</span><span>
+</span><span style="color:#bf616a;">thread </span><span>&#39;</span><span style="color:#a3be8c;">rustc</span><span>&#39; panicked at compiler/rustc_errors/src/lib.rs:1724:30:
+</span><span style="color:#bf616a;">aborting</span><span> due to `</span><span style="color:#bf616a;">-Z</span><span> treat-err-as-bug=1`
+</span><span style="color:#bf616a;">stack</span><span> backtrace:
+</span><span>  </span><span style="color:#bf616a;">...
+</span><span>  </span><span style="color:#bf616a;">23:</span><span>     0x7f32189f3bd7 - rustc_const_eval</span><span style="color:#b48ead;">[</span><span>7551efff2730a760</span><span style="color:#b48ead;">]</span><span>::const_eval::eval_queries::eval_to_const_value_raw_provider
+</span><span>  </span><span style="color:#bf616a;">...
+</span></code></pre>
+<p>By examining the stack, I think <code>rustc_const_eval</code> is the crate to focus on, and we can do a simple verification to prove my guess. Change <code>Cargo.toml</code> to the following:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">16
+</span></code></pre>
+<p>We can see that the problem is no longer reproducing. I think rustc on stage1 compiles <code>rustc_const_eval</code> erroneously.</p>
+<h2 id="simplify-test-rs">Simplify <code>test.rs</code></h2>
+<p>After some tweaking of the reproduction use case, I found that the following code can also be reproduced:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#![</span><span style="color:#bf616a;">crate_type </span><span>= &quot;</span><span style="color:#a3be8c;">lib</span><span>&quot;]
+</span><span>
+</span><span style="color:#b48ead;">const </span><span>_: </span><span style="color:#b48ead;">u32 </span><span>= -</span><span style="color:#d08770;">1.1</span><span style="color:#b48ead;">f32 </span><span>as </span><span style="color:#b48ead;">i32 </span><span>as </span><span style="color:#b48ead;">u32 </span><span>- </span><span style="color:#d08770;">1 </span><span>as </span><span style="color:#b48ead;">u32</span><span>;
+</span></code></pre>
+<p>Also, we can see that the issue here behaves as if any negative floating-point number converted to a signed integer will go straight to 0.</p>
+<h2 id="roughly-identify-the-problem-function">Roughly identify the problem function</h2>
+<p>By reading the <code>rustc_const_eval</code> code and analyzing the call stack, I guess the issue is in <a href="https://github.com/rust-lang/rust/blob/085acd02d4abaf2ccaf629134caa83cfe23283c8/compiler/rustc_const_eval/src/interpret/cast.rs#L183">float_to_float_or_int</a> and <a href="https://github.com/rust-lang/rust/blob/085acd02d4abaf2ccaf629134caa83cfe23283c8/compiler/rustc_const_eval/src/interpret/cast.rs#L309">cast_from_float</a> nearby.</p>
+<p>To verify this, we can use <code>#[inline(never)]</code> to prevent partial optimization. I found that adding <code>#[inline(never)]</code> to <code>float_to_float_or_int</code> is still an issue while adding to <code>cast_from_float</code> makes the test code compile correctly. I guess the issue is in <code>float_to_float_or_int</code> and the inline function <code>cast_from_float</code>.</p>
+<h2 id="is-it-really-about-pgo">Is it really about PGO?</h2>
+<p>In fact, we can reproduce the issue directly using the stage2 version of rustc used to generate PGO:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-generate</span><span>=/tmp/profiles</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span></code></pre>
+<h1 id="use-git-bisect-to-find-which-commit-caused-the-problem">Use git bisect to find which commit caused the problem</h1>
+<p>While this result may not be a faulty commit, it can give us a concrete way to control the compilation of errors. We can further pinpoint the problem by tuning this commit.</p>
+<h2 id="pick-a-good-commit">Pick a good commit</h2>
+<p>In execute git bisect, we need to find a good commit.
+If we can't find a good commit between major releases, I'm going to give up on git bisect because a commit that's too far back in time might not make sense. And the more commits we ignore, the more likely we are to have other unrelated issues.
+Here's a simple approach: LLVM's tags have a creation rule where we create a tag that raises the major version at the same time we create a new release branch, which is <code>llvmorg-{version}-init</code>, which has a linear relationship and is very bisect-friendly.
+I would treat <code>llvmorg-18-init</code> and <code>llvmorg-17.0.1</code> as consistent code.</p>
+<p>Here we have chosen the comparison version:</p>
+<ul>
+<li>Good commit: <a href="https://github.com/llvm/llvm-project/commit/b0daacf58f417634f7c7c9496589d723592a8f5a">b0daacf5</a>, which is the previous commit of <code>llvmorg-17-init</code>, and is similar to <code>llvmorg-16.0.0</code>. Since rust uses version numbers to adapt to LLVM API changes, we need to keep the version numbers consistent with the API.</li>
+<li>Bad commit: <a href="https://github.com/llvm/llvm-project/commit/d0b54bb50e5110a004b41fc06dadf3fee70834b7">d0b54bb5</a>.</li>
+</ul>
+<h2 id="preparing-the-llvm-build-configuration">Preparing the LLVM build configuration</h2>
+<p>Since each step of the bisect takes a long time, I first recommend using a higher-performance computer to shorten this time.</p>
+<p>Then change <code>config.toml</code> to reduce the repetitive build time, my changes are as follows:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[build]
+</span><span style="color:#bf616a;">submodules </span><span>= </span><span style="color:#d08770;">false
+</span><span>
+</span><span>[llvm]
+</span><span style="color:#bf616a;">download-ci-llvm </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">assertions </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">ccache </span><span>= &quot;</span><span style="color:#a3be8c;">sccache</span><span>&quot;
+</span><span style="color:#bf616a;">targets </span><span>= &quot;</span><span style="color:#a3be8c;">X86</span><span>&quot;
+</span><span style="color:#bf616a;">experimental-targets </span><span>= &quot;&quot;
+</span><span>
+</span><span>[target.x86_64-unknown-linux-gnu]
+</span><span style="color:#65737e;"># The commit of the patch will be removed after using bisect.
+</span><span style="color:#bf616a;">llvm-has-rust-patches </span><span>= </span><span style="color:#d08770;">false
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">256
+</span></code></pre>
+<p>Also, change <code>Cargo.toml</code>:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span></code></pre>
+<h2 id="reducing-functions-processed-by-pgo">Reducing functions processed by PGO</h2>
+<p>This reduces build time and further identifies the problem.</p>
+<p>We change <a href="https://github.com/llvm/llvm-project/blob/llvmorg-17.0.2/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp#L1761">PGOInstrumentation.cpp#L1761</a> filtering rules, for example:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">static bool </span><span style="color:#8fa1b3;">skipPGO</span><span>(</span><span style="color:#b48ead;">const</span><span> Function &amp;</span><span style="color:#bf616a;">F</span><span>) {
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">cast_from_float</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<h2 id="execute-git-bisect">Execute git bisect</h2>
+<p>The bisect process is a bit different from the standard LLVM project. Instead of using <code>git bisect skip</code>, we need to manually adapt API changes when we encounter a <code>PassWrapper.cpp</code> compilation failure. Instead of using <code>git bisect skip</code>.
+Since <code>PassWrapper.cpp</code> has to be modified so often, we can't automate the process using <code>git bisect run</code>, but have to do it manually and check the results each time. With any luck, it takes less than 12 runs to get the results.</p>
+<p>After running it for a while, I got a bisect result of <a href="https://github.com/llvm/llvm-project/commit/361464c027239a70d66fb7790032b23696d5b303">361464c0</a>.
+Because the LLVM is so complex, I also generally can't tell what the problem is directly from this commit, and this commit may not necessarily be a faulty commit.</p>
+<p>I generally categorize bisect results into several categories:</p>
+<ul>
+<li>It was a standalone commit that caused the mis-compilation to occur.</li>
+<li>This is a standalone commit that caused a mis-compilation to occur. It was a commit with misleading information that caused a later Pass to produce a &quot;mis&quot; compilation (this is the first type of problem).</li>
+<li>it's just a coincidence that a later mis-compiled Pass provided matching input or exposed an existing mis-compilation (this is the second type of problem).</li>
+</ul>
+<p>At this point, however, we can't categorize the result of this one. But we can use this result to continue debugging the problem.</p>
+<h1 id="finding-the-transformation-of-interest-by-changing-the-llvm-source-code">Finding the transformation of interest by changing the LLVM source code</h1>
+<p>At this point, we don't know where the mis-compilation is, and we can't debug it by getting an IR directly. We still compile and run rustc to locate the problem until we have a clear conclusion.</p>
+<p>Based on the bisect result, <strong>we need to find which function ended up mis-compiling after <code>processImmutArgument</code></strong>.</p>
+<p>Using code like the following can help us step-by-step to pinpoint which function is affected.</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">bool </span><span>MemCpyOptPass::</span><span style="color:#8fa1b3;">processImmutArgument</span><span>(CallBase &amp;</span><span style="color:#bf616a;">CB</span><span>, </span><span style="color:#b48ead;">unsigned </span><span style="color:#bf616a;">ArgNo</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> FnName = CB.</span><span style="color:#bf616a;">getFunction</span><span>()-&gt;</span><span style="color:#bf616a;">getName</span><span>();
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;) &amp;&amp;
+</span><span>        FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">CompileTimeInterpreter</span><span>&quot;) &amp;&amp;
+</span><span>        FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;)) {
+</span><span>      </span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Skip </span><span>&quot; &lt;&lt; FnName &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span><span>      </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>Looking through the log I can find that the function impacted in <code>MemCpyOptPass</code> is:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>&lt;rustc_const_eval::interpret::eval_context::InterpCx&lt;rustc_const_eval::const_eval::machine::CompileTimeInterpreter&gt;&gt;::float_to_float_or_int
+</span></code></pre>
+<p>From the log I found that this function completes multiple <code>memcpy</code> transformations.</p>
+<p>So we can continue filtering to find which transformation is causing the problem.</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">auto</span><span> FnName = CB.</span><span style="color:#bf616a;">getFunction</span><span>()-&gt;</span><span style="color:#bf616a;">getName</span><span>();
+</span><span style="color:#b48ead;">bool</span><span> IsKeyFunction = FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;) &amp;&amp;
+</span><span>                     FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">CompileTimeInterpreter</span><span>&quot;) &amp;&amp;
+</span><span>                     FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;);
+</span><span style="color:#b48ead;">if </span><span>(!IsKeyFunction)
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span style="color:#b48ead;">static int</span><span> Count = </span><span style="color:#d08770;">0</span><span>;
+</span><span>Count += </span><span style="color:#d08770;">1</span><span>;
+</span><span style="color:#b48ead;">if </span><span>(Count != </span><span style="color:#d08770;">3</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Skip </span><span>&quot; &lt;&lt; Count &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>}
+</span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Use </span><span>&quot; &lt;&lt; Count &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span></code></pre>
+<p>When I got to this point, I began to suspect that the mis-compilation had nothing to do with PGO. At this point, I tried canceling the PGO which also reproduced the problem.
+My guess is that PGO was just a coincidence that exposed the mis-compilation to the runtime.
+But we don't yet know what type of <code>MemCpyOptPass</code> it is, and it could be a new coincidence, or a mis-compilation, or a misdirected subsequent Pass. </p>
+<h2 id="using-opt-bisect-limit">Using <code>-opt-bisect-limit</code></h2>
+<p>We can use <code>-opt-bisect-limit</code> to locate which pass changes instructions that cause problems at runtime.</p>
+<p>There are two types of passes found using <code>-opt-bisect-limit</code>:</p>
+<ul>
+<li>The previous pass performed the correct transformation but did not update the metadata and other information in time, resulting in a problem with the found passes.</li>
+<li>There is a mis-compilation in the found pass itself.</li>
+</ul>
+<h2 id="execute-opt-bisect-limit-for-a-specific-crate">Execute <code>-opt-bisect-limit</code> for a specific crate.</h2>
+<p>Trivia: This real debugging was done by changing <code>OptBisect.cpp</code>. However, while writing this article, I found a simpler and more efficient solution.</p>
+<p>If we set <code>-Cllvm-args=-opt-bisect-limit=-1</code> via <code>RUSTFLAGS_NOT_BOOTSTRAP</code> directly, we will get a lot of invalid logs. We want to apply this only to <code>rustc_const_eval</code>.</p>
+<p>The nightly version of <code>cargo</code> provides this. We need to switch to nightly first. make the following changes:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[build]
+</span><span style="color:#bf616a;">cargo </span><span>= &quot;</span><span style="color:#a3be8c;">&lt;path to home&gt;/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo</span><span>&quot;
+</span></code></pre>
+<p>Then update <code>Cargo.toml</code>.</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">cargo-features </span><span>= [&quot;</span><span style="color:#a3be8c;">profile-rustflags</span><span>&quot;]
+</span><span style="color:#65737e;"># ...
+</span><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">rustflags </span><span>= [
+</span><span>  &quot;</span><span style="color:#a3be8c;">-C</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">llvm-args=-opt-bisect-limit=-1</span><span>&quot;,
+</span><span>]
+</span></code></pre>
+<p>Next, we can build using <code>--keep-stage</code>:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --stage</span><span> 2 library</span><span style="color:#bf616a;"> --keep-stage</span><span> 0</span><span style="color:#bf616a;"> --keep-stage-std</span><span> 1 </span><span style="color:#d08770;">2</span><span>&gt; build.log
+</span><span style="color:#bf616a;">./build/host/stage2/bin/rustc</span><span> ./test.rs
+</span></code></pre>
+<p>My final bisect result was:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (560953) MemCpyOptPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span><span>BISECT: running pass (560954) DSEPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span><span>BISECT: NOT running pass (560955) MoveAutoInitPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span></code></pre>
+<p>It's weird to me. If I set the limit to <code>560953</code>, the result does not stop at <code>MemCpyOptPass</code>. The result is a bit untrustworthy.</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (560953) BDCEPass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+</span><span>BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+</span></code></pre>
+<p>However, we can verify that the problem is related to <code>DSEPass</code> in a similar way, by changing the code to skip <code>DSEPass</code>.
+Next, as with debugging <code>MemCpyOptPass</code>, we can find out exactly which instruction <code>DSEPass</code> transformation is causing the final mis-compilation.</p>
+<p>Update: For more stable results with <code>-opt-bisect-limit</code>, we can try <code>-Z no-parallel-llvm</code>. Also, <code>rustc</code> tries to perform ThinLTO by default, which can be turned off with <code>-C lto=false</code>.</p>
+<h1 id="getting-ir-to-prepare-for-llvm-debugging">Getting IR to prepare for LLVM debugging</h1>
+<p>This part is related to LLVM debugging, and I don't have any good experience to share yet.</p>
+<p>But the two important points are:</p>
+<ul>
+<li>We know exactly which transformation affects the result in <code>MemCpyOptPass</code>.</li>
+<li>We also know which transformation in <code>DSEPass</code> caused the final mis-compilation.</li>
+</ul>
+<p>With these two transformations, we can use <code>opt</code> to debug IR. We don't need to use <code>rustc</code> to compile as often!</p>
+<p>The recommended way to get the IR is by changing <code>Cargo.toml</code>:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span><span style="color:#bf616a;">rustflags </span><span>= [
+</span><span>  &quot;</span><span style="color:#a3be8c;">-C</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">save-temps</span><span>&quot;,
+</span><span>]
+</span></code></pre>
+<p>Then find <code>*.no-opt.bc</code> to debug.</p>
+<p>Of course, during this debugging process, we need to know the details of the logic of the two transformations of <code>MemCpyOptPass</code> and <code>DSEPass</code>. Here we'll learn that this is a transformation via alias analysis, which ultimately pinpoints the fact that <code>MemCpyOptPass</code> doesn't update the corresponding alias information when replacing the value used by the instruction.</p>
+<h1 id="next-question-mir-niche-checks">Next question - mir niche checks</h1>
+<p>Although this problem is easier to reproduce than the previous one, it will be more troublesome to solve.
+First, let's switch to <a href="https://github.com/DianQK/rust/commit/cf8d85e49c6f3a5802549055f983fd0ba3f89952">cf8d85e4</a>.</p>
+<p>This can be reproduced by running a test with <code>--stage 2</code>:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> test tests/ui</span><span style="color:#bf616a;"> --stage</span><span> 2
+</span></code></pre>
+<p><code>config.toml</code> reference:</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">profile </span><span>= &quot;</span><span style="color:#a3be8c;">codegen</span><span>&quot;
+</span><span>
+</span><span>[llvm]
+</span><span style="color:#bf616a;">assertions </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">enable-warnings </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">download-ci-llvm </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">ccache </span><span>= &quot;</span><span style="color:#a3be8c;">sccache</span><span>&quot;
+</span><span style="color:#bf616a;">targets </span><span>= &quot;</span><span style="color:#a3be8c;">X86</span><span>&quot;
+</span><span style="color:#bf616a;">experimental-targets </span><span>= &quot;&quot;
+</span><span style="color:#bf616a;">link-shared </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">use-linker </span><span>= &quot;</span><span style="color:#a3be8c;">lld</span><span>&quot;
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">release-debuginfo </span><span>= </span><span style="color:#d08770;">true
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">debug </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">incremental </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">3
+</span><span style="color:#bf616a;">debug-logging </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">deny-warnings </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">codegen-backends </span><span>= [&quot;</span><span style="color:#a3be8c;">llvm</span><span>&quot;]
+</span><span style="color:#bf616a;">use-lld </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">lto </span><span>= &quot;</span><span style="color:#a3be8c;">off</span><span>&quot;
+</span><span style="color:#bf616a;">debug-assertions </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">debug-assertions-std </span><span>= </span><span style="color:#d08770;">false
+</span></code></pre>
+<p>The error log is as follows:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>thread &#39;rustc&#39; panicked at compiler/rustc_mir_build/src/thir/pattern/deconstruct_pat.rs:560:22:
+</span><span>occupied niche: found 0x7f7700000000 but must be in 0x0..=0x2 in type std::option::Option&lt;thir::pattern::deconstruct_pat::SliceKind&gt; at offset 0 with type Int(I64, false)
+</span><span>stack backtrace:
+</span><span>  ...
+</span><span>  13:     0x7f77e92ade54 - &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::Constructor&gt;::split::&lt;core[8d828210e7f791ba]::iter::adapters::map::Map&lt;core[8d828210e7f791ba]::iter::adapters::map::Map&lt;core[8d828210e7f791ba]::slice::iter::Iter&lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::PatStack&gt;, &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::Matrix&gt;::heads::{closure#0}&gt;, &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::DeconstructedPat&gt;::ctor&gt;&gt;
+</span><span>  ...
+</span></code></pre>
+<p>I found that if I set <code>codegen-units=1</code>, the panic disappears. So we can use <code>codegen-units</code> to determine which crate is impacted. I guessed <code>rustc_mir_build</code> based on the stack and tried toggling <code>codegen-units=1</code> to verify. Since this issue occurred at roughly the same point in time as the previous one, we used the same LLVM commit at the start of the bisect. Unfortunately, with the <code>optimize=3</code> set, we can't find a good commit in LLVM 16. But I also tried setting <code>optimize=2</code> and can find LLVM 16 is a good commit.</p>
+<h2 id="tricky-git-bisect">Tricky git bisect</h2>
+<p>During the bisect process, I get an unexpected result:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>---- [ui] tests/ui/issue-11881.rs stdout ----
+</span><span>
+</span><span>error: test compilation failed although it shouldn&#39;t!
+</span><span>status: exit status: 1
+</span><span>command: RUSTC_ICE=&quot;0&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/stage2/bin/rustc&quot; &quot;/home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs&quot; &quot;-Zthreads=1&quot; &quot;-Zsimulate-remapped-rust-src-base=/rustc/FAKE_PREFIX&quot; &quot;-Ztranslate-remapped-path-to-local-path=no&quot; &quot;-Z&quot; &quot;ignore-directory-in-diagnostics-source-blocks=/home/dianqk/.cargo&quot; &quot;--sysroot&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/stage2&quot; &quot;--target=x86_64-unknown-linux-gnu&quot; &quot;-O&quot; &quot;--error-format&quot; &quot;json&quot; &quot;--json&quot; &quot;future-incompat&quot; &quot;-Ccodegen-units=1&quot; &quot;-Zui-testing&quot; &quot;-Zdeduplicate-diagnostics=no&quot; &quot;-Zwrite-long-types-to-disk=no&quot; &quot;-Cstrip=debuginfo&quot; &quot;-C&quot; &quot;prefer-dynamic&quot; &quot;-o&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/test/ui/issue-11881/a&quot; &quot;-A&quot; &quot;internal_features&quot; &quot;-Crpath&quot; &quot;-Cdebuginfo=0&quot; &quot;-Lnative=/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/native/rust-test-helpers&quot; &quot;-Clink-arg=-fuse-ld=lld&quot; &quot;-Clink-arg=-Wl,--threads=1&quot; &quot;-L&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/test/ui/issue-11881/auxiliary&quot;
+</span><span>stdout: none
+</span><span>--- stderr -------------------------------
+</span><span>error: unexpected token: `&amp;`
+</span><span>  --&gt; /home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs:18:25
+</span><span>   |
+</span><span>LL |     fn encode(&amp;self, s: &amp;mut S) -&gt; Result&lt;(), S::Error&gt;;
+</span><span>   |                         ^ unexpected token after this
+</span><span>
+</span><span>error: unexpected token: `&amp;`
+</span><span>  --&gt; /home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs:33:23
+</span><span>   |
+</span><span>LL |     fn fmt(&amp;self, _f: &amp;mut fmt::Formatter&lt;&#39;_&gt;) -&gt; fmt::Result {
+</span><span>   |                       ^ unexpected token after this
+</span></code></pre>
+<p>For this result, we can't use good/bad to execute bisect, which leads bisect to the wrong result.</p>
+<p>Unfortunately, even with a skip, we can't get a bisect result.
+When bisect is in <a href="https://github.com/llvm/llvm-project/compare/f7deb69f22b93d7411d08db14b50aae5caf40fcb...7c78cb4b1f4993a84bf2b46b197d90dcabb9f8c5">f7deb69f2...7c78cb4b</a> internally, it is possible to get this unexpected error. If it's an earlier commit, it's good, and if it's a later commit, it's bad.
+This is because new issues were introduced with the change in the semantics of <code>nonnull</code> and so on, and we overlooked some issue fixes during bisect that led to the exposure of a new issue.</p>
+<p>The history of this commit is as follows:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>bad
+</span><span>Revert &quot;[SimplifyCFG][LICM] Preserve nonnull, range and align metadat…  7c78cb4
+</span><span>skip
+</span><span>[SimplifyCFG][LICM] Preserve nonnull, range and align metadata when s…  78b1fbc
+</span><span>good
+</span></code></pre>
+<p>Since we ignored some commits that caused a new problem, bisect had no results.
+Luckily, this time the problem was exceptional and we were able to drop <code>78b1fbc</code> and <code>7c78cb4</code> using rebase.</p>
+<p>The final bisect result is <a href="https://github.com/DianQK/llvm-project/commit/2f70f65246e987842cfae495839975eaa6245a0c">[AggressiveInstCombine] Enable also for -O2</a>.
+I also found the critical transformation in <code>AggressiveInstCombine</code> by changing the code, but I can't see anything wrong with it from the code or IR. It could be that I'm missing something, or it could be that this is just a lucky opportunity for a triggering.
+We need to keep this point of suspicion in mind and continue troubleshooting.</p>
+<h1 id="codegen-units-256-opt-bisect-limit-n"><code>codegen-units=256</code> &amp; <code>-opt-bisect-limit=n</code></h1>
+<p>This time we have no way to use <code>-opt-bisect-limit</code> because <code>codegen-units</code> is not equal to 1. 
+It doesn't make sense to bisect multiple IRs at the same time. We need to modify the rust code to support selecting a specific CGU to bisect under multiple CGUs.</p>
+<p>First use <code>-C save-temps</code> to find the corresponding IR. See <a href="https://github.com/DianQK/rust/commit/bfd759b704b77d0ff390cc172a62c3d9a0c36986">bfd759b7</a> for the details.</p>
+<p>Trivia: Here I also tried to find the one transformation in AggressiveInstCombine that had an effect. It was a headache that adding <code>-C save-temps</code> changed the symbol names, which made me look again for the associated symbols.</p>
+<p>I wrote a simple script to find this IR:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">for</span><span> bitcode </span><span style="color:#b48ead;">in</span><span> build/x86_64-unknown-linux-gnu/stage1-rustc/x86_64-unknown-linux-gnu/release/deps/rustc_mir_build-*-cgu.*.rcgu.no-opt.bc; </span><span style="color:#b48ead;">do
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">llvm-nm -U </span><span>$</span><span style="color:#bf616a;">bitcode </span><span>| </span><span style="color:#bf616a;">grep -q </span><span>&quot;</span><span style="color:#a3be8c;">example</span><span>&quot;; </span><span style="color:#b48ead;">then
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">bitcode
+</span><span>    </span><span style="color:#b48ead;">fi
+</span><span style="color:#b48ead;">done
+</span></code></pre>
+<p>I viewed the implementation of <code>OptBisect</code>, and although the <code>-opt-bisect-limit</code> option is global, we can replace an empty <code>OptBisect</code> with a separate one for the CGU. The full modification is at <a href="https://github.com/DianQK/rust/commit/a9f62a4a634aef8f792e9cb6eb4573b4b9fc79d2">a9f62a4a</a>.</p>
+<p>Some key changes are referenced below:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">struct </span><span>RunAllOptPassGate : </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">OptPassGate </span><span>{
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">shouldRunPass</span><span>(</span><span style="color:#b48ead;">const</span><span> StringRef </span><span style="color:#bf616a;">PassName</span><span>, StringRef </span><span style="color:#bf616a;">IRDescription</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">isEnabled</span><span>() </span><span style="color:#b48ead;">const override </span><span>{ </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>; }
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">static</span><span> RunAllOptPassGate &amp;</span><span style="color:#8fa1b3;">getRunAllOptPassGate</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">static</span><span> RunAllOptPassGate RunAllOptPassGate;
+</span><span>  </span><span style="color:#b48ead;">return</span><span> RunAllOptPassGate;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">extern </span><span>&quot;</span><span style="color:#a3be8c;">C</span><span>&quot; </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">LLVMRustContextSetSetRunAllOptPassGate</span><span>(LLVMContextRef </span><span style="color:#bf616a;">C</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">unwrap</span><span>(C)-&gt;</span><span style="color:#bf616a;">setOptPassGate</span><span>(</span><span style="color:#bf616a;">getRunAllOptPassGate</span><span>());
+</span><span>}
+</span></code></pre>
+<p>I also added a command line argument <code>-Z llvm-opt-bisect-limit-cgu</code> so that I could bisect using the following script:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">export </span><span style="color:#bf616a;">RUSTFLAGS_NOT_BOOTSTRAP</span><span>=&quot;</span><span style="color:#a3be8c;">-C llvm-args=-opt-bisect-limit=-1 -Z llvm-opt-bisect-limit-cgu=rustc_mir_build.63d28fcded2a05ed-cgu.007</span><span>&quot;
+</span><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --stage</span><span> 2 library</span><span style="color:#bf616a;"> --keep-stage</span><span> 0</span><span style="color:#bf616a;"> --keep-stage-std</span><span> 1 </span><span style="color:#d08770;">2</span><span>&gt; build.log
+</span><span style="color:#bf616a;">./build/host/stage2/bin/rustc</span><span> ./tests/ui/consts/const_prop_slice_pat_ice.rs
+</span></code></pre>
+<p>I also wrote a simple automated bisect script:</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">iterate</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">good</span><span>=`</span><span style="color:#bf616a;">sed -n </span><span>&#39;</span><span style="color:#a3be8c;">1p</span><span>&#39; bisect_result`
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">bad</span><span>=`</span><span style="color:#bf616a;">sed -n </span><span>&#39;</span><span style="color:#a3be8c;">2p</span><span>&#39; bisect_result`
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">result</span><span>=$</span><span style="color:#a3be8c;">((bad </span><span>-</span><span style="color:#a3be8c;"> good))
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">good: </span><span>$</span><span style="color:#bf616a;">good</span><span style="color:#a3be8c;">, bad: </span><span>$</span><span style="color:#bf616a;">bad</span><span>&quot;
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#96b5b4;">[ </span><span>$</span><span style="color:#bf616a;">result -eq</span><span> 1 </span><span style="color:#96b5b4;">]</span><span>; </span><span style="color:#b48ead;">then
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">done</span><span>&quot;
+</span><span>        </span><span style="color:#96b5b4;">exit</span><span> 0
+</span><span>    </span><span style="color:#b48ead;">else
+</span><span>        </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">next</span><span>=$</span><span style="color:#a3be8c;">((good </span><span>+ </span><span style="color:#a3be8c;">(result </span><span>/ </span><span style="color:#d08770;">2</span><span style="color:#a3be8c;">)))
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">next
+</span><span>        </span><span style="color:#bf616a;">bash</span><span> bisect.sh $</span><span style="color:#bf616a;">next
+</span><span>        </span><span style="color:#bf616a;">exit_code</span><span>=$</span><span style="color:#bf616a;">?
+</span><span>        </span><span style="color:#b48ead;">case </span><span>$</span><span style="color:#bf616a;">exit_code </span><span style="color:#b48ead;">in
+</span><span>            0</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#bf616a;">good</span><span>=$</span><span style="color:#bf616a;">next
+</span><span>                ;;
+</span><span>            1</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#bf616a;">bad</span><span>=$</span><span style="color:#bf616a;">next
+</span><span>                ;;
+</span><span>            *</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">failed: </span><span>$</span><span style="color:#bf616a;">exit_code</span><span>&quot;
+</span><span>                </span><span style="color:#96b5b4;">exit</span><span> 1
+</span><span>                ;;
+</span><span>        </span><span style="color:#b48ead;">esac
+</span><span>    </span><span style="color:#b48ead;">fi
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">good </span><span>&gt; bisect_result
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">bad </span><span>&gt;&gt; bisect_result
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">while </span><span style="color:#bf616a;">true</span><span>; </span><span style="color:#b48ead;">do
+</span><span>    </span><span style="color:#bf616a;">iterate
+</span><span>    </span><span style="color:#bf616a;">sleep</span><span> 1
+</span><span style="color:#b48ead;">done
+</span></code></pre>
+<p>But I got a weird result:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ISECT: running pass (13444) InlinerPass on (symbol)
+</span><span>BISECT: NOT running pass (13445) PostOrderFunctionAttrsPass on (symbol)
+</span></code></pre>
+<p>I don't think inline is directly related to this mis-compilation.
+I simply changed <code>OptBisect.cpp</code> to skip <code>InlinerPass</code>:</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">bool </span><span>OptBisect::</span><span style="color:#8fa1b3;">shouldRunPass</span><span>(</span><span style="color:#b48ead;">const</span><span> StringRef </span><span style="color:#bf616a;">PassName</span><span>,
+</span><span>                              StringRef </span><span style="color:#bf616a;">IRDescription</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(PassName == &quot;</span><span style="color:#a3be8c;">InlinerPass</span><span>&quot;) {
+</span><span>      </span><span style="color:#bf616a;">printPassMessage</span><span>(PassName, -</span><span style="color:#d08770;">1</span><span>, IRDescription, </span><span style="color:#d08770;">true</span><span>);
+</span><span>      </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>Eventually, I got:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (10040) CorrelatedValuePropagationPass on symbol
+</span><span>BISECT: NOT running pass (10041) SimplifyCFGPass on symbol
+</span></code></pre>
+<p>To verify that <code>CorrelatedValuePropagationPass</code> is related, it is still done by removing unrelated code, see <a href="https://github.com/DianQK/llvm-project/commit/a08f2c14b1d501aa9b76b96e26c7366c5a6e6e9b">a08f2c14</a>.
+I also added a line of logging for simple validation:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>LLVMLOG: Delete   %102 = and i64 %101, 4294967295   -&gt; and i64 %101, 0xffffffff
+</span><span>...
+</span><span>occupied niche: found 0x7fba00000001 but must be in 0x0..=0x2 in type std::option::Option&lt;thir::pattern::deconstruct_pat::SliceKind&gt; at offset 0 with type Int(I64, false)
+</span><span>0x7fba00000001 &amp; 0xffffffff = 0x1
+</span></code></pre>
+<p>I'm pretty sure this is what we're looking for! This correlates very well with rustc's panic log.
+Eventually, I realized that <code>%101</code> could get <code>undef</code> results under certain control flows. In this case, we should not remove <code>%102</code>.</p>
+<p>Here I am curious why it is related to <code>AggressiveInstCombine</code>, if we remove this Pass, the instruction to delete becomes <code>%123 = and i64 %122, 72057594037927935(0xffffffffffffff)</code>. We still can't delete the instruction, it's just that this huge value makes it hard for the program to encounter during runtime.</p>
+<h1 id="summary">Summary</h1>
+<p>What have we compared?</p>
+<ul>
+<li>Finding the affected crate by comparing different <code>codegen-units</code>.</li>
+<li>Compare results by adding <code>[inline(never)]</code> to find the affected functions.</li>
+<li>git bisect to find out which commit affected the result.</li>
+<li>by changing the code to find out which transformations were affected.</li>
+<li>Finding related passes through <code>-opt-bisect-limit</code> results.</li>
+</ul>
+<p>I'm getting closer to the truth with these approaches. By the way, luck is also important, I don't keep records of my missteps :].</p>
+<p>In these methods, I have also introduced some specific methods:</p>
+<ul>
+<li>git bisect can find results by removing some commits when it doesn't (this may be a case-specific trick)</li>
+<li>cargo provides the ability to apply rustc parameters to a given crate</li>
+<li>Changing the rustc code to apply <code>opt-bisect-limit</code> to a specific CGU should make this useful for large projects.</li>
+</ul>
+<p>The generalized process for solving this type of problem is:</p>
+<ol>
+<li>first find a way to shorten the time to single replication, too long debugging time is annoying</li>
+<li>the key objective is to <strong>find the key transformations that are causing the mis-compilation by comparing the above methods</strong>.</li>
+<li>extract the IR and locate the problem based on the crucial transformations</li>
+<li>fix the problem</li>
+</ol>
+<p>I don't have any experience with step 3 yet, but I would use <code>llvm-extract</code> and <code>llvm-reduce</code> to reduce the amount of IRs I get, which would be helpful for debugging. 
+I would also use <code>-opt-bisect-limit</code> to extract the IR for intermediate processes and manually remove some functions or instructions to debug the problem.</p>
+<p>I don't have a clear idea of how to submit a proper fix yet, and currently, I rarely manage to get PRs for LGTM without modifications. l need to learn and practice more ;).</p>
+<h1 id="refer">Refer</h1>
+<ul>
+<li><a href="https://rustc-dev-guide.rust-lang.org/compiler-debugging.html">https://rustc-dev-guide.rust-lang.org/compiler-debugging.html</a></li>
+<li><a href="https://rustc-dev-guide.rust-lang.org/backend/debugging.html">https://rustc-dev-guide.rust-lang.org/backend/debugging.html</a></li>
+<li><a href="https://llvm.org/docs/GitBisecting.html">https://llvm.org/docs/GitBisecting.html</a></li>
+<li><a href="https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option">https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option</a></li>
+<li><a href="https://www.llvm.org/docs/AliasAnalysis.html">https://www.llvm.org/docs/AliasAnalysis.html</a></li>
+<li><a href="https://doc.rust-lang.org/rustc/codegen-options/index.html#lto">https://doc.rust-lang.org/rustc/codegen-options/index.html#lto</a></li>
+</ul>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+          
+            <a href="https://dianqk.blog/about">About</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://dianqk.blog/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://github.com/DianQK/dianqk.blog">Source on Github</a>
+            
+          
+        </nav>
+        
+        
+        <small>Built with <a href="https://www.getzola.org/">Zola</a>.<br />
+          Maintained with &hearts; for the web.<br />
+          
+        </small>
+        
+      </footer>
+      
+
+    </main>
+    
+    
+  </body>
+</html>
+

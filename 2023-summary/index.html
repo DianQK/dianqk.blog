@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>2023 Summary &middot; dianqk&#x27;s blog</title>
+    <meta name="description" content="
+
+  This year marks my first continuous involvement in open-source contributions. I&#x27;ve fixed numerous mis-compilation, added missing optimizations, and included LTO, debugging info, built-in functions, WebAssembly, and even an issue with Apple Silicon.
+
+" />
+    <link rel="shortcut icon"  href="https://dianqk.blog/favicon.ico" />
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://dianqk.blog/atom.xml"><link rel="me" href="https:&#x2F;&#x2F;mastodon.online&#x2F;@dianqk" /><style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="dianqk&#x27;s blog">
+      
+      <meta property="og:title" content="2023 Summary">
+      <meta property="og:description" content="This year marks my first continuous involvement in open-source contributions. I&#x27;ve fixed numerous mis-compilation, added missing optimizations, and included LTO, debugging info, built-in functions, WebAssembly, and even an issue with Apple Silicon.">
+      <meta property="og:url" content="https://dianqk.blog/2023-summary/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-10-28T00:00:00+00:00" />
+
+      
+      
+    
+
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://dianqk.blog" title="Home">dianqk&#x27;s blog</a>
+          <br /><small></small>
+        </h3>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>2023 Summary</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-10-28T00:00:00+00:00">October 28, 2023</time></p>
+  
+
+  <h1 id="summary">Summary</h1>
+<p>This year marks my first continuous involvement in open-source contributions. I've fixed numerous mis-compilation, added missing optimizations, and included LTO, debugging info, built-in functions, WebAssembly, and even an issue with Apple Silicon.</p>
+<p><strong>During this journey, I was fortunate to receive numerous invaluable help, especially from those who reviewed my pull requests. Thank everyone very much. (●´∀｀●)</strong></p>
+<p>Highlight:</p>
+<ul>
+<li>Resolving a long-standing issue causing debugging info corruption under LTO.</li>
+<li>Adding the crate for built-in functions to LTO in Rust, addressing another long-standing issue.</li>
+<li>Adopting the English name &quot;Quentin Dian&quot; for better communication.</li>
+</ul>
+<p>I've categorized my contributions using these emojis:</p>
+<ul>
+<li>💢 Mis-compilation</li>
+<li>🍻 Missing optimization</li>
+<li>ℹ️ Debugging info</li>
+<li>🦀 Rust-related</li>
+<li>🐉 LLVM-related</li>
+<li>🐦 Swift-related</li>
+<li>🍎 Apple-related</li>
+<li>⏳ Blocked by other issues</li>
+</ul>
+<h1 id="llvm">LLVM</h1>
+<p>Commit history: <a href="https://github.com/llvm/llvm-project/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31">https://github.com/llvm/llvm-project/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31</a>.</p>
+<p>By the way, my first LLVM commit was <a href="https://github.com/llvm/llvm-project/commit/1e9fa0b12a7619add4a259f80315f984b5f7e2ce">[MachineOutliner] Fix the side effect of outlined function when the register is implicit use and implicit-def in the same instruction. D112911</a>.</p>
+<ol>
+<li>🍻🦀⏳ <a href="https://github.com/llvm/llvm-project/commit/b6a0be8ce3114d0c57e7a7d6c3c222986ca506ad">[SimplifyCFG] Check if the return instruction causes undefined behavior D144319</a> Blocked by <a href="https://github.com/llvm/llvm-project/pull/69498">PR69498</a></li>
+<li>🍻⏳ <a href="https://github.com/llvm/llvm-project/commit/f890f010f6a70addbd885acd0c8d1b9578b6246f">[SimplifyCFG] Improve the precision of <code>PtrValueMayBeModified</code> D144563</a> Follows D144319, not blocked by <a href="https://github.com/llvm/llvm-project/pull/69498">PR69498</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/2832d7941f4207f1fcf813b27cf08cecc3086959">[SROA] Remove UB-implying metadata when promoting speculative instruction. D148456</a> Fixes <a href="https://github.com/rust-lang/rust/issues/110256">PR110256</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/533b7c1f6c696817df332cc7c9acbe3b454eadf2">[GlobalOpt] Don't replace the aliasee if it has other references. D145293</a> Fixes <a href="https://github.com/rust-lang/rust/issues/108030">PR108030</a></li>
+<li>🦀🐦ℹ️ <a href="https://github.com/llvm/llvm-project/commit/2ee4d0386c783f58abe708298228de648239b435">[Verifier] definition subprograms cannot be nested within DICompositeType when enabling ODR. D152095</a></li>
+<li>🐦ℹ️ <a href="https://github.com/llvm/llvm-project/commit/ca1a5b37c7236dd29a3169859153dfdcce066b51">[Coroutine][DebugInfo] Update the linkage name of the declaration of coro-split functions in the debug info. D157184</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/commit/c3f227ead65c606409ff8cc3333a6c751f156a9c">[TailCallElim] Remove the readonly attribute of byval. D156793</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/65219">[JumpThreading] Invalidate LVI after combineMetadataForCSE. #65219</a></li>
+<li>🍻🦀 <a href="https://github.com/llvm/llvm-project/pull/65875">[EarlyCSE] Compare GEP instructions based on offset #65875</a></li>
+<li>🍻🦀 <a href="https://github.com/llvm/llvm-project/pull/67077">[SimplifyCFG] Hoist common instructions on switch #67077</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/67539">[MemCpyOpt] Merge alias metadatas when replacing arguments #67539</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/68190">[LVI][CVP] Treat undef like a full range #68190</a></li>
+<li>💢 <a href="https://github.com/llvm/llvm-project/pull/68711">[LVI][CVP] Treat undef like a full range on abs(x, false) #68711</a></li>
+<li>💢🦀 <a href="https://github.com/llvm/llvm-project/pull/70580">[MemCpyOpt] Combine alias metadatas when replacing byval arguments #70580</a></li>
+<li>💢🦀🍎 <a href="https://github.com/llvm/llvm-project/pull/75184">[AArch64] ORRWrs is copy instruction when there's no implicit def of the X register #75184</a></li>
+</ol>
+<h1 id="rust">Rust</h1>
+<p>Commit history: <a href="https://github.com/rust-lang/rust/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31">https://github.com/rust-lang/rust/commits?author=DianQK&amp;since=2023-01-01&amp;until=2023-12-31</a>.</p>
+<p>Apart from simple pull requests like updating test cases, my contributions mainly revolved around built-ins and LTO:</p>
+<ol>
+<li><a href="https://github.com/rust-lang/rust/pull/113716">Add the <code>no-builtins</code> attribute to functions when <code>no_builtins</code> is applied at the crate level. #113716</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/113923">Restore <code>#![no_builtins]</code> crates participation in LTO. #113923</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/118036">Add thinlto support to codegen, assembly and coverage tests #118036</a></li>
+<li><a href="https://github.com/rust-lang/rust/pull/118568">Avoid adding builtin functions to <code>symbols.o</code> #118568</a></li>
+</ol>
+<p>Despite addressing many issues during this process, unfortunately, there are still some <a href="https://github.com/rust-lang/rust/issues/118609">known issues</a> that need resolution. I'll submit MCP once these issues are resolved.</p>
+<h1 id="ruslin">Ruslin</h1>
+<p>I use Joplin for note-taking, but I don't want Joplin's Android client. Hence, I developed a compatible client: <a href="https://github.com/ruslin-note/ruslin-android">ruslin-android</a>. I apologize for the lack of recent updates. I plan to adjust my spare time next year. I'm also considering desktop development.</p>
+<h1 id="other-projects">Other Projects</h1>
+<ul>
+<li>ℹ️🍎 <a href="https://github.com/apple/swift/pull/67077">[swift][IRGen][DebugInfo] split method declaration and definition. #67077</a></li>
+<li>ℹ️🍎 <a href="https://github.com/apple/swift/pull/67592">[swift][Backtracing][Linux] Support the <code>DW_AT_specification</code> attribute. #67592 </a></li>
+<li>🦀 <a href="https://github.com/wasm3/wasm3/pull/436">[wasm3] Fix the issue of incorrectly freeing the stack address when unwinding local functions. #436</a></li>
+<li>🦀 <a href="https://github.com/DioxusLabs/dioxus/pull/1112">[dioxus] Fix the issue of duplicate unique ID for atoms using <code>newtype</code>. #1112</a></li>
+</ul>
+<h1 id="personal-details">Personal Details</h1>
+<p>DianQK is just a casual Chinese pseudonym formed from the pinyin abbreviation of &quot;靛(dian)&quot; and &quot;青(qing)&quot;, where &quot;靛青&quot; refers to indigo. It has led to confusion about how to call me. To resolve this, I asked ChatGPT for a name: Quentin Dian. So, you can call me Dian or dianqk.</p>
+<p>I switched entirely from Arch Linux to NixOS, a fantastic operating system where I can manage everything with code.</p>
+<p>To enhance my efficiency, I also purchased a GPD handheld console. I complete most of the code above using the GPD during my subway commutes. I assembled a machine with a 7950X processor, cutting my local build time in half. I can now complete a full compile in just a few minutes. I also bought a Mac Mini (M2) to test issues on that platform.</p>
+<p><img src="/2023-10-28-summary-gpd.jpg" alt="GPG Win 4" /></p>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+          
+            <a href="https://dianqk.blog/about">About</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://dianqk.blog/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://github.com/DianQK/dianqk.blog">Source on Github</a>
+            
+          
+        </nav>
+        
+        
+        <small>Built with <a href="https://www.getzola.org/">Zola</a>.<br />
+          Maintained with &hearts; for the web.<br />
+          
+        </small>
+        
+      </footer>
+      
+
+    </main>
+    
+    
+  </body>
+</html>
+

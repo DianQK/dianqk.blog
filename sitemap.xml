@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://dianqk.blog/</loc>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/2023-summary/</loc>
+        <lastmod>2023-10-28</lastmod>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/about/</loc>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/finding-llvm-bugs-in-rustc-with-comparisons/</loc>
+        <lastmod>2023-10-15</lastmod>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/zh/</loc>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/zh/2023-summary/</loc>
+        <lastmod>2023-10-28</lastmod>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/zh/about/</loc>
+    </url>
+    <url>
+        <loc>https://dianqk.blog/zh/finding-llvm-bugs-in-rustc-with-comparisons/</loc>
+        <lastmod>2023-10-15</lastmod>
+    </url>
+</urlset>

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>使用好坏比较发现 rust 中的 LLVM bug &middot; 靛青博客</title>
+    <meta name="description" content="
+
+  在大型工程中定位问题总是很复杂的，掺杂在 rust 中的 LLVM 的 bug 就是这类情况。本文介绍笔者如何定位 stage2 下 rust 单元测试失败问题。
+
+" />
+    <link rel="shortcut icon"  href="https://dianqk.blog/favicon.ico" />
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="https://dianqk.blog/zh/atom.xml"><link rel="me" href="https:&#x2F;&#x2F;mastodon.online&#x2F;@dianqk" /><style>html,body{background:#fffaf7;color:#2d2d2d;font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"}a,a:visited{color:darkred;text-decoration:none}a:hover{text-decoration:underline}main{margin:auto;max-width:38rem;padding:.8rem}pre{background:#fff;overflow:scroll;padding:1rem}td{border:1px solid #2d2d2d;padding:10px}img{height:auto;max-width:100%}.homepage-list{list-style:none;padding:1rem 0}.homepage-list li{align-items:center;display:flex;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px}@media (max-width: 38rem){.homepage-list li a{width:100%}}</style>
+
+    <meta property="og:site_name" content="靛青博客">
+      
+      <meta property="og:title" content="使用好坏比较发现 rust 中的 LLVM bug">
+      <meta property="og:description" content="在大型工程中定位问题总是很复杂的，掺杂在 rust 中的 LLVM 的 bug 就是这类情况。本文介绍笔者如何定位 stage2 下 rust 单元测试失败问题。">
+      <meta property="og:url" content="https://dianqk.blog/zh/finding-llvm-bugs-in-rustc-with-comparisons/">
+      <meta property="og:image" content="">
+
+      <meta property="og:type" content="article" />
+        <meta property="article:published_time" content="2023-10-15T00:00:00+00:00" />
+
+      
+      
+    
+
+  </head>
+  
+
+  <body>
+    <main id="main" role="main">
+      
+      <header role="banner">
+        <h3 style="margin-top:0;">
+          <a href="https://dianqk.blog/zh/" title="Home">靛青博客</a>
+          <br /><small></small>
+        </h3>
+      </header>
+      <hr />
+      
+
+      
+<article>
+  <h1>使用好坏比较发现 rust 中的 LLVM bug</h1>
+
+  
+    <p style="font-size:90%;">Posted on <time datetime="2023-10-15T00:00:00+00:00">October 15, 2023</time></p>
+  
+
+  <h1 id="zhai-yao">摘要</h1>
+<p>在大型工程中定位问题总是很复杂的，掺杂在 rust 中的 LLVM 的 bug 就是这类情况。我将在本文介绍我如何定位 stage2 下 rust 单元测试失败问题。
+我将围绕 <a href="https://rust-lang.zulipchat.com/#narrow/stream/131828-t-compiler/topic/Failing.20tests.20when.20rustc.20is.20compiled.20with.201.20CGU">Failing tests when rustc is compiled with 1 CGU</a> 和 <a href="https://rust-lang.zulipchat.com/#narrow/stream/131828-t-compiler/topic/Implementing.20niche.20checks">Implementing niche checks</a> 记录我解决这类问题的过程，希望能对后续解决该类问题有所帮助。</p>
+<h1 id="kai-shi-zhi-qian">开始之前</h1>
+<ul>
+<li>由于这是我解决后的总结文章，我可能会疏漏一些详细过程，还请见谅。</li>
+<li>欢迎提交 <a href="https://github.com/DianQK/dianqk.blog/issues">issue</a> 或 <a href="https://github.com/DianQK/dianqk.blog/pulls">PR</a> 改正文章的错误</li>
+</ul>
+<p>我为本文准备了对应的工程，参见：</p>
+<ul>
+<li><a href="https://github.com/DianQK/rust/tree/blog/repro-1-cgu">https://github.com/DianQK/rust/tree/blog/repro-1-cgu</a></li>
+<li><a href="https://github.com/DianQK/llvm-project/tree/blog/repro-1-cgu">https://github.com/DianQK/llvm-project/tree/blog/repro-1-cgu</a></li>
+<li><a href="https://github.com/DianQK/rust/tree/blog/mir-niche-checks">https://github.com/DianQK/rust/tree/blog/mir-niche-checks</a></li>
+<li><a href="https://github.com/DianQK/llvm-project/tree/blog/mir-niche-checks">https://github.com/DianQK/llvm-project/tree/blog/mir-niche-checks</a></li>
+</ul>
+<p>修复这两个问题的 PR 是：</p>
+<ul>
+<li><a href="https://github.com/llvm/llvm-project/pull/67539">https://github.com/llvm/llvm-project/pull/67539</a></li>
+<li><a href="https://github.com/llvm/llvm-project/pull/68190">https://github.com/llvm/llvm-project/pull/68190</a></li>
+</ul>
+<h1 id="di-1-ge-wen-ti-de-fu-xian-fang-shi">第 1 个问题的复现方式</h1>
+<p>首先我们需要切换到可以复现的版本：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">git</span><span> clone https://github.com/rust-lang/rust.git
+</span><span style="color:#bf616a;">git</span><span> checkout 085acd02d4abaf2ccaf629134caa83cfe23283c8
+</span></code></pre>
+<p>然后需要修改 <code>config.toml</code>：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">profile </span><span>= &quot;</span><span style="color:#a3be8c;">dist</span><span>&quot;
+</span><span>
+</span><span>[build]
+</span><span style="color:#bf616a;">profiler </span><span>= </span><span style="color:#d08770;">true
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">2
+</span></code></pre>
+<p>我们还需要了解 <a href="https://github.com/rust-lang/rustc-perf">rustc-perf</a> 如何使用，然后使用如下脚本构建带有 PGO 优化的 rustc：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-generate</span><span>=/tmp/profiles</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span><span style="color:#bf616a;">cargo</span><span> run</span><span style="color:#bf616a;"> --bin</span><span> collector bench_local</span><span style="color:#bf616a;"> --include</span><span> serde,syn &lt;path to stage2/bin/rustc&gt;
+</span><span style="color:#bf616a;">./build/ci-llvm/bin/llvm-profdata</span><span> merge</span><span style="color:#bf616a;"> -o</span><span> profiles.profdata /tmp/profiles
+</span><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-use</span><span>=profiles.profdata</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span></code></pre>
+<p>接下来使用该版本 rustc 编译如下代码即可复现该问题：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#![</span><span style="color:#bf616a;">feature</span><span>(inline_const)]
+</span><span>
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">const </span><span>{
+</span><span>        assert!(-</span><span style="color:#d08770;">9.223372036854776e18</span><span style="color:#b48ead;">f64 </span><span>as </span><span style="color:#b48ead;">i64 </span><span>== </span><span style="color:#d08770;">0x8000000000000000</span><span style="color:#b48ead;">u64 </span><span>as </span><span style="color:#b48ead;">i64</span><span>);
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>复现的错误日志如下：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">error[E0080]:</span><span> evaluation of `</span><span style="color:#bf616a;">main::{constant#0</span><span>}` failed
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:5:9
+</span><span>  |
+</span><span style="color:#bf616a;">5 </span><span>|         </span><span style="color:#bf616a;">assert!</span><span>(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>  |         </span><span style="color:#bf616a;">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span><span> the evaluated program panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64</span><span>&#39;, ./test.rs:5:9
+</span><span>  |
+</span><span>  = </span><span style="color:#bf616a;">note:</span><span> this error originates in the macro `</span><span style="color:#bf616a;">assert</span><span>` (in Nightly builds, run with</span><span style="color:#bf616a;"> -Z</span><span> macro-backtrace for more info)
+</span><span>
+</span><span style="color:#bf616a;">note:</span><span> erroneous constant encountered
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:4:5
+</span><span>  |
+</span><span style="color:#bf616a;">4 </span><span>| </span><span style="color:#bf616a;">/</span><span>     const {
+</span><span>5 | |         assert!(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>6 | |     }
+</span><span>  | |</span><span style="color:#bf616a;">_____^
+</span><span>
+</span><span style="color:#bf616a;">error:</span><span> aborting due to previous error
+</span><span>
+</span><span style="color:#bf616a;">For</span><span> more information about this error, try `</span><span style="color:#bf616a;">rustc --explain</span><span> E0080`.
+</span></code></pre>
+<h1 id="zuo-yi-xie-chu-bu-de-fen-xi">做一些初步的分析</h1>
+<h2 id="shi-yong-cuo-wu-dui-zhan-pan-duan-cun-zai-wen-ti-de-crate">使用错误堆栈判断存在问题的 crate</h2>
+<p>我们可以使用 <code>-Z treat-err-as-bug</code> 获取报错堆栈，被错误编译的函数很可能在这里。</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">›</span><span> ./build/host/stage2/bin/rustc ./test.rs</span><span style="color:#bf616a;"> -Z</span><span> treat-err-as-bug
+</span><span style="color:#bf616a;">error[E0080]:</span><span> evaluation of `</span><span style="color:#bf616a;">main::{constant#0</span><span>}` failed
+</span><span> </span><span style="color:#bf616a;">--</span><span>&gt; ./test.rs:5:9
+</span><span>  |
+</span><span style="color:#bf616a;">5 </span><span>|         </span><span style="color:#bf616a;">assert!</span><span>(-9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64);
+</span><span>  |         </span><span style="color:#bf616a;">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span><span> the evaluated program panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: -9.223372036854776e18f64 as i64 == 0x8000000000000000u64 as i64</span><span>&#39;, ./test.rs:5:9
+</span><span>  |
+</span><span>  = </span><span style="color:#bf616a;">note:</span><span> this error originates in the macro `</span><span style="color:#bf616a;">assert</span><span>` (in Nightly builds, run with</span><span style="color:#bf616a;"> -Z</span><span> macro-backtrace for more info)
+</span><span>
+</span><span style="color:#bf616a;">thread </span><span>&#39;</span><span style="color:#a3be8c;">rustc</span><span>&#39; panicked at compiler/rustc_errors/src/lib.rs:1724:30:
+</span><span style="color:#bf616a;">aborting</span><span> due to `</span><span style="color:#bf616a;">-Z</span><span> treat-err-as-bug=1`
+</span><span style="color:#bf616a;">stack</span><span> backtrace:
+</span><span>  </span><span style="color:#bf616a;">...
+</span><span>  </span><span style="color:#bf616a;">23:</span><span>     0x7f32189f3bd7 - rustc_const_eval</span><span style="color:#b48ead;">[</span><span>7551efff2730a760</span><span style="color:#b48ead;">]</span><span>::const_eval::eval_queries::eval_to_const_value_raw_provider
+</span><span>  </span><span style="color:#bf616a;">...
+</span></code></pre>
+<p>通过观察堆栈，我认为 <code>rustc_const_eval</code> 是值得关注的 crate。我们可以做个简单的验证来证明我猜测。修改 <code>Cargo.toml</code> 为如下内容：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">16
+</span></code></pre>
+<p>我们可以发现问题不再复现。我认为是 stage1 的 rustc 错误编译了 <code>rustc_const_eval</code>。</p>
+<h2 id="jian-hua-test-rs">简化 <code>test.rs</code></h2>
+<p>经过一些对复现用例的调整，我发现如下代码也可以复现：</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span>#![</span><span style="color:#bf616a;">crate_type </span><span>= &quot;</span><span style="color:#a3be8c;">lib</span><span>&quot;]
+</span><span>
+</span><span style="color:#b48ead;">const </span><span>_: </span><span style="color:#b48ead;">u32 </span><span>= -</span><span style="color:#d08770;">1.1</span><span style="color:#b48ead;">f32 </span><span>as </span><span style="color:#b48ead;">i32 </span><span>as </span><span style="color:#b48ead;">u32 </span><span>- </span><span style="color:#d08770;">1 </span><span>as </span><span style="color:#b48ead;">u32</span><span>;
+</span></code></pre>
+<p>同时我们可以发现，这里的问题表现是任意一个负浮点数转换为有符号整数都会直接变成 0。</p>
+<h2 id="da-zhi-ding-wei-wen-ti-han-shu">大致定位问题函数</h2>
+<p>通过阅读 <code>rustc_const_eval</code> 代码和分析调用堆栈，我猜测问题出在 <a href="https://github.com/rust-lang/rust/blob/085acd02d4abaf2ccaf629134caa83cfe23283c8/compiler/rustc_const_eval/src/interpret/cast.rs#L183">float_to_float_or_int</a> 和 <a href="https://github.com/rust-lang/rust/blob/085acd02d4abaf2ccaf629134caa83cfe23283c8/compiler/rustc_const_eval/src/interpret/cast.rs#L309">cast_from_float</a> 附近。</p>
+<p>为了验证这一点，我们可以使用 <code>#[inline(never)]</code> 阻止部分优化。我通过尝试发现，添加 <code>#[inline(never)]</code> 到 <code>float_to_float_or_int</code> 仍然有问题，而添加到 <code>cast_from_float</code> 后，测试代码可以正常编译。我猜测问题出现在 <code>float_to_float_or_int</code> 和内联的函数 <code>cast_from_float</code> 中。</p>
+<h2 id="zhen-de-he-pgo-you-guan-ma">真的和 PGO 有关吗？</h2>
+<p>事实上，我们可以直接使用用于生成 PGO 的 stage2 版本 rustc 复现该问题：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --rust-profile-generate</span><span>=/tmp/profiles</span><span style="color:#bf616a;"> --stage</span><span> 2 library
+</span></code></pre>
+<h1 id="shi-yong-git-bisect-xun-zhao-shi-na-ge-ti-jiao-hong-fa-liao-zhe-ge-wen-ti">使用 git bisect 寻找是哪个提交触发了这个问题</h1>
+<p>尽管这一结果未必是有问题的提交，但它可以给我们提供一个具体的控制错误编译的方式。我们可以通过调整这个提交进一步定位问题。</p>
+<h2 id="xuan-qu-yi-ge-hao-de-ti-jiao">选取一个好的提交</h2>
+<p>为了执行 git bisect，我们需要找到一个好的提交。
+如果我们不能在一个大版本之间找到一个好的提交，我会放弃使用 git bisect。因为太久远的提交可能没有意义。而且随着我们忽略的提交越多，越可能出现其他不相关的问题。
+这里我有一个简单的选择方式。LLVM 的 tag 有一个创建规则，我们在创建新的 release 分支时，同时创建一个提高大版本的 tag，这个 tag 规则为 <code>llvmorg-{version}-init</code>，这类 tag 的关系是线性的，对于 bisect 非常友好。
+我会把 <code>llvmorg-18-init</code> 和 <code>llvmorg-17.0.1</code> 当作一致的代码。</p>
+<p>这里我们选择的对比版本为：</p>
+<ul>
+<li>好的提交: <a href="https://github.com/llvm/llvm-project/commit/b0daacf58f417634f7c7c9496589d723592a8f5a">b0daacf5</a>，这是 <code>llvmorg-17-init</code> 的前一个提交，和 <code>llvmorg-16.0.0</code> 相似。由于 rust 使用版本号适配 LLVM 的 API 变更，我们需要保持和 API 一致的版本号。</li>
+<li>坏的提交: <a href="https://github.com/llvm/llvm-project/commit/d0b54bb50e5110a004b41fc06dadf3fee70834b7">d0b54bb5</a>。</li>
+</ul>
+<h2 id="zhun-bei-llvm-de-gou-jian-pei-zhi">准备 LLVM 的构建配置</h2>
+<p>由于每一步的 bisect 要花很长时间，首先我推荐使用更高性能的计算机缩短这个时间。</p>
+<p>然后修改 <code>config.toml</code> 减少重复构建时间，我的修改如下：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[build]
+</span><span style="color:#bf616a;">submodules </span><span>= </span><span style="color:#d08770;">false
+</span><span>
+</span><span>[llvm]
+</span><span style="color:#bf616a;">download-ci-llvm </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">assertions </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">ccache </span><span>= &quot;</span><span style="color:#a3be8c;">sccache</span><span>&quot;
+</span><span style="color:#bf616a;">targets </span><span>= &quot;</span><span style="color:#a3be8c;">X86</span><span>&quot;
+</span><span style="color:#bf616a;">experimental-targets </span><span>= &quot;&quot;
+</span><span>
+</span><span>[target.x86_64-unknown-linux-gnu]
+</span><span style="color:#65737e;"># 使用 bisect 后 patch 的 commit 会被移除
+</span><span style="color:#bf616a;">llvm-has-rust-patches </span><span>= </span><span style="color:#d08770;">false
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">256
+</span></code></pre>
+<p>同时修改 <code>Cargo.toml</code>：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span></code></pre>
+<h2 id="jian-shao-pgo-chu-li-de-han-shu">减少 PGO 处理的函数</h2>
+<p>这即可以减少构建时间，也可以进一步明确问题所在。</p>
+<p>我们修改 <a href="https://github.com/llvm/llvm-project/blob/llvmorg-17.0.2/llvm/lib/Transforms/Instrumentation/PGOInstrumentation.cpp#L1761">PGOInstrumentation.cpp#L1761</a> 的过滤规则，比如：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">static bool </span><span style="color:#8fa1b3;">skipPGO</span><span>(</span><span style="color:#b48ead;">const</span><span> Function &amp;</span><span style="color:#bf616a;">F</span><span>) {
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(!F.</span><span style="color:#bf616a;">getName</span><span>().</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">cast_from_float</span><span>&quot;))
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<h2 id="zhi-xing-git-bisect">执行 git bisect</h2>
+<p>和标准的 LLVM 工程的 bisect 过程有些不同。当遇到 <code>PassWrapper.cpp</code> 编译失败时，我们需要手动适配 API 变更。而不是使用 <code>git bisect skip</code>。
+由于要频繁修改 <code>PassWrapper.cpp</code>，我们不能使用 <code>git bisect run</code> 自动完成这一过程，只能手动执行并检查每次的结果。运气好的话，不超过 12 次就可以得到结果。</p>
+<p>经过一段时间的运行，我获得的 bisect 结果是 <a href="https://github.com/llvm/llvm-project/commit/361464c027239a70d66fb7790032b23696d5b303">361464c0</a>。
+由于 LLVM 非常复杂，我还一般不能直接从这一提交中判断问题所在，同时这个提交未必是有问题的提交。</p>
+<p>我一般将 bisect 结果分为几类：</p>
+<ul>
+<li>这是一个导致错误编译发生的独立 commit</li>
+<li>提交了一些误导信息，导致后面的 Pass 产生了“错误”编译（这是第一个问题的类型）</li>
+<li>只是巧合，为后面的错误编译的 Pass 提供了匹配的输入或者是暴露了已有的错误编译（这是第二个问题的类型）</li>
+</ul>
+<p>不过此时我们还无法给这次的结果进行分类。但我们可以使用这个结果继续调试定位。</p>
+<h1 id="tong-guo-xiu-gai-llvm-yuan-ma-ding-wei-gan-xing-qu-de-zhuan-huan">通过修改 LLVM 源码定位感兴趣的转换</h1>
+<p>此时我们不知道错误编译在哪里，我们无法通过直接获取一个 IR 调试。在有明确的结论前，我们仍然编译运行 rustc 定位问题。</p>
+<p>根据 bisect 结果，<strong>我们需要找到是哪个函数经过 <code>processImmutArgument</code> 后，最终出现错误编译。</strong></p>
+<p>使用类似下面的代码可以帮助我们逐步定位哪个函数被影响了。</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">bool </span><span>MemCpyOptPass::</span><span style="color:#8fa1b3;">processImmutArgument</span><span>(CallBase &amp;</span><span style="color:#bf616a;">CB</span><span>, </span><span style="color:#b48ead;">unsigned </span><span style="color:#bf616a;">ArgNo</span><span>) {
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>    </span><span style="color:#b48ead;">auto</span><span> FnName = CB.</span><span style="color:#bf616a;">getFunction</span><span>()-&gt;</span><span style="color:#bf616a;">getName</span><span>();
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;) &amp;&amp;
+</span><span>        FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">CompileTimeInterpreter</span><span>&quot;) &amp;&amp;
+</span><span>        FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;)) {
+</span><span>      </span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Skip </span><span>&quot; &lt;&lt; FnName &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span><span>      </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>    </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>通过日志我可以发现在 <code>MemCpyOptPass</code> 中影响的函数是：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>&lt;rustc_const_eval::interpret::eval_context::InterpCx&lt;rustc_const_eval::const_eval::machine::CompileTimeInterpreter&gt;&gt;::float_to_float_or_int
+</span></code></pre>
+<p>从日志中我发现这个函数完成了多次 <code>memcpy</code> 转换。</p>
+<p>所以我们可以继续过滤找到是哪一次转换导致了这个问题。</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">auto</span><span> FnName = CB.</span><span style="color:#bf616a;">getFunction</span><span>()-&gt;</span><span style="color:#bf616a;">getName</span><span>();
+</span><span style="color:#b48ead;">bool</span><span> IsKeyFunction = FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">rustc_const_eval</span><span>&quot;) &amp;&amp;
+</span><span>                     FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">CompileTimeInterpreter</span><span>&quot;) &amp;&amp;
+</span><span>                     FnName.</span><span style="color:#bf616a;">contains</span><span>(&quot;</span><span style="color:#a3be8c;">float_to_float_or_int</span><span>&quot;);
+</span><span style="color:#b48ead;">if </span><span>(!IsKeyFunction)
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span style="color:#b48ead;">static int</span><span> Count = </span><span style="color:#d08770;">0</span><span>;
+</span><span>Count += </span><span style="color:#d08770;">1</span><span>;
+</span><span style="color:#b48ead;">if </span><span>(Count != </span><span style="color:#d08770;">3</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Skip </span><span>&quot; &lt;&lt; Count &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span><span>  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">false</span><span>;
+</span><span>}
+</span><span style="color:#bf616a;">errs</span><span>() &lt;&lt; &quot;</span><span style="color:#a3be8c;">LLVMLOG: Use </span><span>&quot; &lt;&lt; Count &lt;&lt; &quot;</span><span style="color:#96b5b4;">\n</span><span>&quot;;
+</span></code></pre>
+<p>当我走到这一步时，我开始怀疑这次错误编译和 PGO 无关。此时我尝试取消 PGO 也可以复现该问题。
+我猜测 PGO 只是一个巧合，将这个错误编译暴露到运行时。
+但我们还不知道 <code>MemCpyOptPass</code> 是那种类型，可能是新的巧合，也可能是错误编译，或者是误导了后续 Pass。 </p>
+<h2 id="shi-yong-opt-bisect-limit">使用 <code>-opt-bisect-limit</code></h2>
+<p>我们可以使用 <code>-opt-bisect-limit</code> 定位是哪个 Pass 修改指令导致运行时出现问题。</p>
+<p>使用 <code>-opt-bisect-limit</code> 发现的 Pass 有两种类型：</p>
+<ul>
+<li>前面的 pass 执行了正确的转换，但是没有及时更新 metadata 等信息，导致找到的 Pass 出现问题</li>
+<li>找到的 Pass 本身存在错误编译</li>
+</ul>
+<h2 id="wei-te-ding-crate-zhi-xing-opt-bisect-limit">为特定 crate 执行 <code>-opt-bisect-limit</code></h2>
+<p>小插曲：本次真实调试的过程是通过修改 <code>OptBisect.cpp</code> 完成的。但在写这篇文章时，我发现了更简单高效的方法。</p>
+<p>如果我们直接通过 <code>RUSTFLAGS_NOT_BOOTSTRAP</code> 设置 <code>-Cllvm-args=-opt-bisect-limit=-1</code> 将得到大量的无效日志。我们希望只应用到 <code>rustc_const_eval</code>。</p>
+<p>nightly 版本的 <code>cargo</code> 提供了这个功能。我们需要先切换到 nightly。修改如下：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[build]
+</span><span style="color:#bf616a;">cargo </span><span>= &quot;</span><span style="color:#a3be8c;">&lt;path to home&gt;/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo</span><span>&quot;
+</span></code></pre>
+<p>然后更新 <code>Cargo.toml</code>。</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">cargo-features </span><span>= [&quot;</span><span style="color:#a3be8c;">profile-rustflags</span><span>&quot;]
+</span><span style="color:#65737e;"># ...
+</span><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">rustflags </span><span>= [
+</span><span>  &quot;</span><span style="color:#a3be8c;">-C</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">llvm-args=-opt-bisect-limit=-1</span><span>&quot;,
+</span><span>]
+</span></code></pre>
+<p>接下来我们可以使用 <code>--keep-stage</code> 构建：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --stage</span><span> 2 library</span><span style="color:#bf616a;"> --keep-stage</span><span> 0</span><span style="color:#bf616a;"> --keep-stage-std</span><span> 1 </span><span style="color:#d08770;">2</span><span>&gt; build.log
+</span><span style="color:#bf616a;">./build/host/stage2/bin/rustc</span><span> ./test.rs
+</span></code></pre>
+<p>最终我的 bisect 结果为：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (560953) MemCpyOptPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span><span>BISECT: running pass (560954) DSEPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span><span>BISECT: NOT running pass (560955) MoveAutoInitPass on _RNvMNtNtCsiODAygBxQYA_16rustc_const_eval9interpret4castINtNtB4_12eval_context8InterpCxNtNtNtB6_10const_eval7machine22CompileTimeInterpreterE21float_to_float_or_intB6_
+</span></code></pre>
+<p>有一个让我感觉奇怪的地方是，如果我设置 limit 为 <code>560953</code>，结果不会停到 <code>MemCpyOptPass</code>。这是个奇怪的结果让本次的 bisect 结果有些不可信。</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (560953) BDCEPass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+</span><span>BISECT: NOT running pass (560954) InstCombinePass on _RNvXsg_NtNtCsjGTw0T6X7N4_16rustc_const_eval9interpret7operandNtB5_9ImmediateNtNtCs6sCMhXnFQZh_4core3fmt5Debug3fmtB9_
+</span></code></pre>
+<p>不过我们可以使用类似的方法验证问题是否与 <code>DSEPass</code> 有关，通过修改代码跳过 <code>DSEPass</code> 即可。
+接下来和调试 <code>MemCpyOptPass</code> 一样，我们可以找到具体是哪个指令 <code>DSEPass</code> 转换导致了最终的错误编译。</p>
+<p>更新：为了让 <code>-opt-bisect-limit</code> 的结果更稳定，我们可以试试 <code>-Z no-parallel-llvm</code>。另外，<code>rustc</code> 默认会尝试执行 ThinLTO，可以通过 <code>-C lto=false</code> 关闭。</p>
+<h1 id="huo-qu-ir-zhun-bei-llvm-de-diao-shi">获取 IR 准备 LLVM 的调试</h1>
+<p>这部分涉及到 LLVM 的具体调试，我暂时还没有什么好的经验分享。</p>
+<p>但重要的两点是：</p>
+<ul>
+<li>我们知道了在 <code>MemCpyOptPass</code> 中，具体是哪次转换影响了结果</li>
+<li>我们也知道了在 <code>DSEPass</code> 中，具体是哪次转换导致了最终的错误编译</li>
+</ul>
+<p>通过这两此转换，我们就可以使用 <code>opt</code> 调试 IR 了。我们不需要再使用 <code>rustc</code> 频繁编译了！</p>
+<p>对于获取 IR 的方式我推荐通过修改 <code>Cargo.toml</code> 获得：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span>[profile.release.package.rustc_const_eval]
+</span><span style="color:#bf616a;">codegen-units </span><span>= </span><span style="color:#d08770;">1
+</span><span style="color:#bf616a;">rustflags </span><span>= [
+</span><span>  &quot;</span><span style="color:#a3be8c;">-C</span><span>&quot;, &quot;</span><span style="color:#a3be8c;">save-temps</span><span>&quot;,
+</span><span>]
+</span></code></pre>
+<p>然后找到 <code>*.no-opt.bc</code> 进行调试。</p>
+<p>当然在这个调试过程，我们需要知道 <code>MemCpyOptPass</code> 和 <code>DSEPass</code> 的具体两个转换的逻辑。在这里我们会了解到这是通过别名分析进行的转换，最终定位到 <code>MemCpyOptPass</code> 在替换指令使用的值时，没有更新对应的别名信息。</p>
+<h1 id="xia-yi-ge-wen-ti-mir-niche-checks">下一个问题 - mir niche checks</h1>
+<p>尽管这个问题的复现比前者要简单，但定位起来会更麻烦。
+首先让我们切换到 <a href="https://github.com/DianQK/rust/commit/cf8d85e49c6f3a5802549055f983fd0ba3f89952">cf8d85e4</a>。</p>
+<p>使用 <code>--stage 2</code> 执行测试即可复现：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#bf616a;">./x</span><span> test tests/ui</span><span style="color:#bf616a;"> --stage</span><span> 2
+</span></code></pre>
+<p><code>config.toml</code> 参考：</p>
+<pre data-lang="toml" style="background-color:#2b303b;color:#c0c5ce;" class="language-toml "><code class="language-toml" data-lang="toml"><span style="color:#bf616a;">profile </span><span>= &quot;</span><span style="color:#a3be8c;">codegen</span><span>&quot;
+</span><span>
+</span><span>[llvm]
+</span><span style="color:#bf616a;">assertions </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">enable-warnings </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">download-ci-llvm </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">ccache </span><span>= &quot;</span><span style="color:#a3be8c;">sccache</span><span>&quot;
+</span><span style="color:#bf616a;">targets </span><span>= &quot;</span><span style="color:#a3be8c;">X86</span><span>&quot;
+</span><span style="color:#bf616a;">experimental-targets </span><span>= &quot;&quot;
+</span><span style="color:#bf616a;">link-shared </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">use-linker </span><span>= &quot;</span><span style="color:#a3be8c;">lld</span><span>&quot;
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">release-debuginfo </span><span>= </span><span style="color:#d08770;">true
+</span><span>
+</span><span>[rust]
+</span><span style="color:#bf616a;">debug </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">incremental </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">optimize </span><span>= </span><span style="color:#d08770;">3
+</span><span style="color:#bf616a;">debug-logging </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">deny-warnings </span><span>= </span><span style="color:#d08770;">false
+</span><span style="color:#bf616a;">codegen-backends </span><span>= [&quot;</span><span style="color:#a3be8c;">llvm</span><span>&quot;]
+</span><span style="color:#bf616a;">use-lld </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">lto </span><span>= &quot;</span><span style="color:#a3be8c;">off</span><span>&quot;
+</span><span style="color:#bf616a;">debug-assertions </span><span>= </span><span style="color:#d08770;">true
+</span><span style="color:#bf616a;">debug-assertions-std </span><span>= </span><span style="color:#d08770;">false
+</span></code></pre>
+<p>错误日志如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>thread &#39;rustc&#39; panicked at compiler/rustc_mir_build/src/thir/pattern/deconstruct_pat.rs:560:22:
+</span><span>occupied niche: found 0x7f7700000000 but must be in 0x0..=0x2 in type std::option::Option&lt;thir::pattern::deconstruct_pat::SliceKind&gt; at offset 0 with type Int(I64, false)
+</span><span>stack backtrace:
+</span><span>  ...
+</span><span>  13:     0x7f77e92ade54 - &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::Constructor&gt;::split::&lt;core[8d828210e7f791ba]::iter::adapters::map::Map&lt;core[8d828210e7f791ba]::iter::adapters::map::Map&lt;core[8d828210e7f791ba]::slice::iter::Iter&lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::PatStack&gt;, &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::usefulness::Matrix&gt;::heads::{closure#0}&gt;, &lt;rustc_mir_build[48ebee3fe6c2e2b3]::thir::pattern::deconstruct_pat::DeconstructedPat&gt;::ctor&gt;&gt;
+</span><span>  ...
+</span></code></pre>
+<p>我发现如果设置 <code>codegen-units=1</code>，这个 panic 就会消失。
+那么我们正好可以借助 <code>codegen-units</code> 判断是哪个 crate 被影响了。根据堆栈猜测是 <code>rustc_mir_build</code>，尝试切换 <code>codegen-units=1</code> 验证。
+由于这个问题发生和上一个时间点基本一致，我们使用相同的 LLVM 提交作为 bisect 开始。
+遗憾的是，如果设置 <code>optimize=3</code>，我们无法在 LLVM 16 找到一个好的提交。但我还尝试了设置 <code>optimize=2</code> 可以找到 LLVM 16 是好的提交。</p>
+<h2 id="ji-shou-de-git-bisect">棘手的 git bisect</h2>
+<p>在 bisect 过程中，我得到一个意外结果：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>---- [ui] tests/ui/issue-11881.rs stdout ----
+</span><span>
+</span><span>error: test compilation failed although it shouldn&#39;t!
+</span><span>status: exit status: 1
+</span><span>command: RUSTC_ICE=&quot;0&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/stage2/bin/rustc&quot; &quot;/home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs&quot; &quot;-Zthreads=1&quot; &quot;-Zsimulate-remapped-rust-src-base=/rustc/FAKE_PREFIX&quot; &quot;-Ztranslate-remapped-path-to-local-path=no&quot; &quot;-Z&quot; &quot;ignore-directory-in-diagnostics-source-blocks=/home/dianqk/.cargo&quot; &quot;--sysroot&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/stage2&quot; &quot;--target=x86_64-unknown-linux-gnu&quot; &quot;-O&quot; &quot;--error-format&quot; &quot;json&quot; &quot;--json&quot; &quot;future-incompat&quot; &quot;-Ccodegen-units=1&quot; &quot;-Zui-testing&quot; &quot;-Zdeduplicate-diagnostics=no&quot; &quot;-Zwrite-long-types-to-disk=no&quot; &quot;-Cstrip=debuginfo&quot; &quot;-C&quot; &quot;prefer-dynamic&quot; &quot;-o&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/test/ui/issue-11881/a&quot; &quot;-A&quot; &quot;internal_features&quot; &quot;-Crpath&quot; &quot;-Cdebuginfo=0&quot; &quot;-Lnative=/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/native/rust-test-helpers&quot; &quot;-Clink-arg=-fuse-ld=lld&quot; &quot;-Clink-arg=-Wl,--threads=1&quot; &quot;-L&quot; &quot;/home/dianqk/rust-workspace/rust/build/x86_64-unknown-linux-gnu/test/ui/issue-11881/auxiliary&quot;
+</span><span>stdout: none
+</span><span>--- stderr -------------------------------
+</span><span>error: unexpected token: `&amp;`
+</span><span>  --&gt; /home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs:18:25
+</span><span>   |
+</span><span>LL |     fn encode(&amp;self, s: &amp;mut S) -&gt; Result&lt;(), S::Error&gt;;
+</span><span>   |                         ^ unexpected token after this
+</span><span>
+</span><span>error: unexpected token: `&amp;`
+</span><span>  --&gt; /home/dianqk/rust-workspace/rust/tests/ui/issue-11881.rs:33:23
+</span><span>   |
+</span><span>LL |     fn fmt(&amp;self, _f: &amp;mut fmt::Formatter&lt;&#39;_&gt;) -&gt; fmt::Result {
+</span><span>   |                       ^ unexpected token after this
+</span></code></pre>
+<p>面对这个结果，我们不可使用 good/bad 执行 bisect，这将 bisect 导向错误的结果。</p>
+<p>遗憾的是，即便使用 skip，我们也无法得到 bisect 结果。
+当 bisect 在 <a href="https://github.com/llvm/llvm-project/compare/f7deb69f22b93d7411d08db14b50aae5caf40fcb...7c78cb4b1f4993a84bf2b46b197d90dcabb9f8c5">f7deb69f2...7c78cb4b</a> 内部时，就可以得到这个预期之外的错误。如果是更早的提交，是 good，更晚的提交，是 bad。
+这是因为 <code>nonnull</code> 等语义的变更后引入了新的问题，我们在 bisect 期间忽略了一些问题修复，导致暴露了一个新的问题。</p>
+<p>此处提交历史如下：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>bad
+</span><span>Revert &quot;[SimplifyCFG][LICM] Preserve nonnull, range and align metadat…  7c78cb4
+</span><span>skip
+</span><span>[SimplifyCFG][LICM] Preserve nonnull, range and align metadata when s…  78b1fbc
+</span><span>good
+</span></code></pre>
+<p>由于我们忽略了一些提交导致新问题发生，bisect 没有结果。
+幸运的是，这次的问题很特别的，我们可以使用 rebase 将 <code>78b1fbc</code> 和 <code>7c78cb4</code> drop 掉。</p>
+<p>最终 bisect 结果是 <a href="https://github.com/DianQK/llvm-project/commit/2f70f65246e987842cfae495839975eaa6245a0c">[AggressiveInstCombine] Enable also for -O2</a>。
+我也通过修改代码找到了在 <code>AggressiveInstCombine</code> 的关键转换，但从代码和 IR 上，我看不出什么问题。可能是我疏漏了什么，也可能是这只是个幸运的触发机会。
+我们需要记住这个怀疑点，继续排查。</p>
+<h1 id="codegen-units-256-opt-bisect-limit-n"><code>codegen-units=256</code> &amp; <code>-opt-bisect-limit=n</code></h1>
+<p>这次我们没有办法使用 <code>-opt-bisect-limit</code>，因为 <code>codegen-units</code> 不等于 1。 
+同时对多个 IR 进行 bisect 没有意义。我们需要修改 rust 代码支持在多个 CGU 下选择特定的 CGU 进行 bisect。</p>
+<p>首先使用 <code>-C save-temps</code> 找到对应的 IR。修改方式参考 <a href="https://github.com/DianQK/rust/commit/bfd759b704b77d0ff390cc172a62c3d9a0c36986">bfd759b7</a>。</p>
+<p>小插曲：这里我也尝试了在 AggressiveInstCombine 中寻找有影响的那一次转换。很头痛的是，添加 <code>-C save-temps</code> 后，符号名会变，这让我重新找了一下有关联的符号。</p>
+<p>我编写了一个简单的脚本找到这个 IR：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">for</span><span> bitcode </span><span style="color:#b48ead;">in</span><span> build/x86_64-unknown-linux-gnu/stage1-rustc/x86_64-unknown-linux-gnu/release/deps/rustc_mir_build-*-cgu.*.rcgu.no-opt.bc; </span><span style="color:#b48ead;">do
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">llvm-nm -U </span><span>$</span><span style="color:#bf616a;">bitcode </span><span>| </span><span style="color:#bf616a;">grep -q </span><span>&quot;</span><span style="color:#a3be8c;">example</span><span>&quot;; </span><span style="color:#b48ead;">then
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">bitcode
+</span><span>    </span><span style="color:#b48ead;">fi
+</span><span style="color:#b48ead;">done
+</span></code></pre>
+<p>我查看了 <code>OptBisect</code> 的实现，尽管 <code>-opt-bisect-limit</code> 参数是全局的，但我们可以为 CGU 单独替换一个空的 <code>OptBisect</code>。完整修改在 <a href="https://github.com/DianQK/rust/commit/a9f62a4a634aef8f792e9cb6eb4573b4b9fc79d2">a9f62a4a</a>。</p>
+<p>一些关键修改参考如下：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">struct </span><span>RunAllOptPassGate : </span><span style="color:#b48ead;">public </span><span style="color:#a3be8c;">OptPassGate </span><span>{
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">shouldRunPass</span><span>(</span><span style="color:#b48ead;">const</span><span> StringRef </span><span style="color:#bf616a;">PassName</span><span>, StringRef </span><span style="color:#bf616a;">IRDescription</span><span>) </span><span style="color:#b48ead;">override </span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">bool </span><span style="color:#8fa1b3;">isEnabled</span><span>() </span><span style="color:#b48ead;">const override </span><span>{ </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>; }
+</span><span>};
+</span><span>
+</span><span style="color:#b48ead;">static</span><span> RunAllOptPassGate &amp;</span><span style="color:#8fa1b3;">getRunAllOptPassGate</span><span>() {
+</span><span>  </span><span style="color:#b48ead;">static</span><span> RunAllOptPassGate RunAllOptPassGate;
+</span><span>  </span><span style="color:#b48ead;">return</span><span> RunAllOptPassGate;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">extern </span><span>&quot;</span><span style="color:#a3be8c;">C</span><span>&quot; </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">LLVMRustContextSetSetRunAllOptPassGate</span><span>(LLVMContextRef </span><span style="color:#bf616a;">C</span><span>) {
+</span><span>  </span><span style="color:#bf616a;">unwrap</span><span>(C)-&gt;</span><span style="color:#bf616a;">setOptPassGate</span><span>(</span><span style="color:#bf616a;">getRunAllOptPassGate</span><span>());
+</span><span>}
+</span></code></pre>
+<p>我还增加了一个命令行参数 <code>-Z llvm-opt-bisect-limit-cgu</code>，这样我就可以使用下面的脚本进行 bisect：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">export </span><span style="color:#bf616a;">RUSTFLAGS_NOT_BOOTSTRAP</span><span>=&quot;</span><span style="color:#a3be8c;">-C llvm-args=-opt-bisect-limit=-1 -Z llvm-opt-bisect-limit-cgu=rustc_mir_build.63d28fcded2a05ed-cgu.007</span><span>&quot;
+</span><span style="color:#bf616a;">./x</span><span> build</span><span style="color:#bf616a;"> --stage</span><span> 2 library</span><span style="color:#bf616a;"> --keep-stage</span><span> 0</span><span style="color:#bf616a;"> --keep-stage-std</span><span> 1 </span><span style="color:#d08770;">2</span><span>&gt; build.log
+</span><span style="color:#bf616a;">./build/host/stage2/bin/rustc</span><span> ./tests/ui/consts/const_prop_slice_pat_ice.rs
+</span></code></pre>
+<p>我还编写了一个简单的自动 bisect 脚本：</p>
+<pre data-lang="bash" style="background-color:#2b303b;color:#c0c5ce;" class="language-bash "><code class="language-bash" data-lang="bash"><span style="color:#b48ead;">function </span><span style="color:#8fa1b3;">iterate</span><span>() {
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">good</span><span>=`</span><span style="color:#bf616a;">sed -n </span><span>&#39;</span><span style="color:#a3be8c;">1p</span><span>&#39; bisect_result`
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">bad</span><span>=`</span><span style="color:#bf616a;">sed -n </span><span>&#39;</span><span style="color:#a3be8c;">2p</span><span>&#39; bisect_result`
+</span><span>    </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">result</span><span>=$</span><span style="color:#a3be8c;">((bad </span><span>-</span><span style="color:#a3be8c;"> good))
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">good: </span><span>$</span><span style="color:#bf616a;">good</span><span style="color:#a3be8c;">, bad: </span><span>$</span><span style="color:#bf616a;">bad</span><span>&quot;
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#96b5b4;">[ </span><span>$</span><span style="color:#bf616a;">result -eq</span><span> 1 </span><span style="color:#96b5b4;">]</span><span>; </span><span style="color:#b48ead;">then
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">done</span><span>&quot;
+</span><span>        </span><span style="color:#96b5b4;">exit</span><span> 0
+</span><span>    </span><span style="color:#b48ead;">else
+</span><span>        </span><span style="color:#b48ead;">local </span><span style="color:#bf616a;">next</span><span>=$</span><span style="color:#a3be8c;">((good </span><span>+ </span><span style="color:#a3be8c;">(result </span><span>/ </span><span style="color:#d08770;">2</span><span style="color:#a3be8c;">)))
+</span><span>        </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">next
+</span><span>        </span><span style="color:#bf616a;">bash</span><span> bisect.sh $</span><span style="color:#bf616a;">next
+</span><span>        </span><span style="color:#bf616a;">exit_code</span><span>=$</span><span style="color:#bf616a;">?
+</span><span>        </span><span style="color:#b48ead;">case </span><span>$</span><span style="color:#bf616a;">exit_code </span><span style="color:#b48ead;">in
+</span><span>            0</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#bf616a;">good</span><span>=$</span><span style="color:#bf616a;">next
+</span><span>                ;;
+</span><span>            1</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#bf616a;">bad</span><span>=$</span><span style="color:#bf616a;">next
+</span><span>                ;;
+</span><span>            *</span><span style="color:#b48ead;">)
+</span><span>                </span><span style="color:#96b5b4;">echo </span><span>&quot;</span><span style="color:#a3be8c;">failed: </span><span>$</span><span style="color:#bf616a;">exit_code</span><span>&quot;
+</span><span>                </span><span style="color:#96b5b4;">exit</span><span> 1
+</span><span>                ;;
+</span><span>        </span><span style="color:#b48ead;">esac
+</span><span>    </span><span style="color:#b48ead;">fi
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">good </span><span>&gt; bisect_result
+</span><span>    </span><span style="color:#96b5b4;">echo </span><span>$</span><span style="color:#bf616a;">bad </span><span>&gt;&gt; bisect_result
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">while </span><span style="color:#bf616a;">true</span><span>; </span><span style="color:#b48ead;">do
+</span><span>    </span><span style="color:#bf616a;">iterate
+</span><span>    </span><span style="color:#bf616a;">sleep</span><span> 1
+</span><span style="color:#b48ead;">done
+</span></code></pre>
+<p>但我得到了一个奇怪的结果：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>ISECT: running pass (13444) InlinerPass on (symbol)
+</span><span>BISECT: NOT running pass (13445) PostOrderFunctionAttrsPass on (symbol)
+</span></code></pre>
+<p>我认为 inline 与这个错误编译无直接关系。
+我简单地修改了 <code>OptBisect.cpp</code> 跳过 <code>InlinerPass</code>：</p>
+<pre data-lang="cpp" style="background-color:#2b303b;color:#c0c5ce;" class="language-cpp "><code class="language-cpp" data-lang="cpp"><span style="color:#b48ead;">bool </span><span>OptBisect::</span><span style="color:#8fa1b3;">shouldRunPass</span><span>(</span><span style="color:#b48ead;">const</span><span> StringRef </span><span style="color:#bf616a;">PassName</span><span>,
+</span><span>                              StringRef </span><span style="color:#bf616a;">IRDescription</span><span>) {
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(PassName == &quot;</span><span style="color:#a3be8c;">InlinerPass</span><span>&quot;) {
+</span><span>      </span><span style="color:#bf616a;">printPassMessage</span><span>(PassName, -</span><span style="color:#d08770;">1</span><span>, IRDescription, </span><span style="color:#d08770;">true</span><span>);
+</span><span>      </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">true</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#65737e;">// ...
+</span><span>}
+</span></code></pre>
+<p>最终我得到：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>BISECT: running pass (10040) CorrelatedValuePropagationPass on symbol
+</span><span>BISECT: NOT running pass (10041) SimplifyCFGPass on symbol
+</span></code></pre>
+<p>为了验证 <code>CorrelatedValuePropagationPass</code> 是否有关，仍然是通过删除不相关的代码，参见：<a href="https://github.com/DianQK/llvm-project/commit/a08f2c14b1d501aa9b76b96e26c7366c5a6e6e9b">a08f2c14</a>。
+我还添加了一行日志进行简单的验证：</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>LLVMLOG: Delete   %102 = and i64 %101, 4294967295   -&gt; and i64 %101, 0xffffffff
+</span><span>...
+</span><span>occupied niche: found 0x7fba00000001 but must be in 0x0..=0x2 in type std::option::Option&lt;thir::pattern::deconstruct_pat::SliceKind&gt; at offset 0 with type Int(I64, false)
+</span><span>0x7fba00000001 &amp; 0xffffffff = 0x1
+</span></code></pre>
+<p>我敢肯定这就是我们要找的！这和 rustc 的 panic 日志有非常大的相关性。
+最终我发现 <code>%101</code> 在特定的控制流下，可能获得 <code>undef</code> 结果。在这种情况下，我们不应该删除 <code>%102</code>。</p>
+<p>这里我很好奇为什么会和 <code>AggressiveInstCombine</code> 有关，如果我们去掉这个 Pass，要删除的指令变为 <code>%123 = and i64 %122, 72057594037927935(0xffffffffffffff)</code>。我们仍然不能删除这个指令，只是这个巨大的数值让程序在运行期间很难遇到。</p>
+<h1 id="zong-jie">总结</h1>
+<p>我们比较了什么？</p>
+<ul>
+<li>通过比较不同 <code>codegen-units</code>，定位被影响的 crate</li>
+<li>通过添加 <code>[inline(never)]</code> 比较结果，定位被影响的函数</li>
+<li>通过 git bisect 定位是哪个 commit 影响了结果</li>
+<li>通过修改代码，定位是哪次转换影响了结果</li>
+<li>通过 <code>-opt-bisect-limit</code> 结果定位有关联的 Pass</li>
+</ul>
+<p>我通过这些方法逐渐接近真相。对了，运气也很重要，我没有记录我走错路的经历 :]。</p>
+<p>在这些方法中，我也介绍了一些具体技巧：</p>
+<ul>
+<li>git bisect 拿不到结果时可以通过移除一些 commit 找到结果（这可能只是特定场景的技巧）</li>
+<li>cargo 提供了应用 rustc 参数到指定 crate 的功能</li>
+<li>修改 rustc 代码，将 <code>opt-bisect-limit</code> 应用到具体的 CGU，让这个功能在大型项目上应当很有用</li>
+</ul>
+<p>解决这类问题概括流程是：</p>
+<ol>
+<li>首先想办法缩短单次复现的时间，太长的调试时间令人恼火</li>
+<li>关键目标是<strong>通过上述比较方法，找到导致错误编译的关键转换</strong></li>
+<li>提取 IR，根据关键转换定位问题</li>
+<li>修复问题</li>
+</ol>
+<p>暂时我还没有第三步骤的心得与经验，但我会使用 <code>llvm-extract</code> 和 <code>llvm-reduce</code> 减少获得的 IR，这对于调试会有些帮助。 
+我也会使用 <code>-opt-bisect-limit</code> 提取中间过程的 IR，并手动删除一些函数或指令定位问题。</p>
+<p>对于如何提交一个合适的修复，我还没有清晰的思路，目前我很少做到无修改获得 LGTM 的 PR。我还需要更多的学习与实践 ;)。</p>
+<h1 id="can-kao">参考</h1>
+<ul>
+<li><a href="https://rustc-dev-guide.rust-lang.org/compiler-debugging.html">https://rustc-dev-guide.rust-lang.org/compiler-debugging.html</a></li>
+<li><a href="https://rustc-dev-guide.rust-lang.org/backend/debugging.html">https://rustc-dev-guide.rust-lang.org/backend/debugging.html</a></li>
+<li><a href="https://llvm.org/docs/GitBisecting.html">https://llvm.org/docs/GitBisecting.html</a></li>
+<li><a href="https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option">https://doc.rust-lang.org/cargo/reference/unstable.html#profile-rustflags-option</a></li>
+<li><a href="https://www.llvm.org/docs/AliasAnalysis.html">https://www.llvm.org/docs/AliasAnalysis.html</a></li>
+<li><a href="https://doc.rust-lang.org/rustc/codegen-options/index.html#lto">https://doc.rust-lang.org/rustc/codegen-options/index.html#lto</a></li>
+</ul>
+
+</article>
+
+
+      
+      <footer role="contentinfo">
+        <hr />
+        
+        
+        <nav style="margin-bottom:1rem;" role="navigation">
+          
+          
+            <a href="https://dianqk.blog/zh/about">关于</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://dianqk.blog/zh/atom.xml">RSS</a>
+            
+              <span>&middot;</span>
+            
+          
+            <a href="https://github.com/DianQK/dianqk.blog">Github 源码</a>
+            
+          
+        </nav>
+        
+        
+        <small>Built with <a href="https://www.getzola.org/">Zola</a>.<br />
+          Maintained with &hearts; for the web.<br />
+          
+        </small>
+        
+      </footer>
+      
+
+    </main>
+    
+    
+  </body>
+</html>
+
